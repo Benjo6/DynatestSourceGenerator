@@ -1,6 +1,6 @@
 ﻿namespace DynatestSourceGenerator.Extensions;
 
-public static class StringExtensionMethods
+public static class StringExtensions
 {
     public static string ReplaceFirst(this string text, string search, string replace)
     {

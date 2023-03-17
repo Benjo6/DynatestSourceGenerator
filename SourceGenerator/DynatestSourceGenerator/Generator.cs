@@ -6,12 +6,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using DynatestSourceGenerator.Attributes;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace DynatestSourceGenerator;
 
 [Generator]
 public class Generator : ISourceGenerator
 {
+    private const string GeneratedFileSuffix = ".g.cs";
+    
     public void Initialize(GeneratorInitializationContext context)
     {
 /*#if DEBUG
@@ -24,9 +27,6 @@ public class Generator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-        /*var nodes = context.Compilation.SyntaxTrees
-            .SelectMany(s => s.GetRoot().DescendantNodes());*/
-
         var nodes = from tree in context.Compilation.SyntaxTrees
             from node in tree.GetRoot().DescendantNodes()
             select node;
@@ -70,6 +70,7 @@ public class Generator : ISourceGenerator
                 var properties = getClassWithoutIgnoredProperties.ChildNodes()
                     .Select(s => s as PropertyDeclarationSyntax)
                     .WhereNotNull();
+                
                 var directives = classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
                     .Select(s => s as UsingDirectiveSyntax)
                     .WhereNotNull();
@@ -78,7 +79,7 @@ public class Generator : ISourceGenerator
                     .Select(s => s as NamespaceDeclarationSyntax).WhereNotNull();
 
                 var generatedClass = GenerateClass(originalName, className, namespaces, directives, properties, useDynamic);
-                context.AddSource(className, SourceText.From(generatedClass, Encoding.UTF8));
+                context.AddSource(className+GeneratedFileSuffix, SourceText.From(generatedClass, Encoding.UTF8));
             }
         }
     }
@@ -155,16 +156,24 @@ namespace SourceDto
             
         foreach (var property in properties)
         {
+            if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
             var useExisting = GetUsingExistingAttribute(property);
             if (useExisting == null)
             {
-                classBuilder.AppendLine($"\t\t{property}");
+                if (propertyDeclaration.AccessorList == null ||propertyDeclaration.AccessorList.Accessors.All(a => a.Kind() != SyntaxKind.SetAccessorDeclaration) && propertyDeclaration.ExpressionBody is not null)
+                {
+                    classBuilder.AppendLine($"\t\t{propertyDeclaration.Modifiers} {propertyDeclaration.Type} {propertyDeclaration.Identifier.Text} {property.ExpressionBody};");
+                }
+                else 
+                {
+                    classBuilder.AppendLine($"\t\t{propertyDeclaration}");
+                }
             }
             else
             {
                 var replace = GetUsingArgument(useExisting, className);
-                var dto = property.ToString().GetLastPart("]")
-                    .ReplaceFirst(property.Type.ToString(), replace ?? $"{property.Type}DTO");
+                var dto = propertyDeclaration.ToString().GetLastPart("]")
+                    .ReplaceFirst(propertyDeclaration.Type.ToString(), replace ?? $"{propertyDeclaration.Type}DTO");
 
                 classBuilder.AppendLine($"\t\t{dto}");
             }
@@ -177,16 +186,26 @@ namespace SourceDto
         {{");
         foreach (var property in properties)
         {
+            if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
+            var propertyName = propertyDeclaration.Identifier.Text;
             var useExisting = GetUsingExistingAttribute(property);
             if (useExisting == null)
             {
-                classBuilder.AppendLine($"\t\t\t{property.Identifier} = instance.{property.Identifier};");
+                if (propertyDeclaration.AccessorList == null || propertyDeclaration.AccessorList.Accessors.All(a => a.Kind() != SyntaxKind.SetAccessorDeclaration))
+                {
+                    
+                }
+                else
+                {
+                    classBuilder.AppendLine($"\t\t\t{propertyName} = instance.{propertyName};");
+                }
             }
             else
             {
                 var replace = GetUsingArgument(useExisting, className);
                 var name = replace ?? $"{property.Type}DTO";
-                classBuilder.AppendLine($"\t\t\t{property.Identifier} = new {name}().Map(instance.{property.Identifier});");
+                classBuilder.AppendLine(
+                    $"\t\t\t{property.Identifier} = new {name}().Map(instance.{property.Identifier});");
             }
         }
             
