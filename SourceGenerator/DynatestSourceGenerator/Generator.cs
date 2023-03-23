@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using DynatestSourceGenerator.Extensions;
@@ -11,134 +12,79 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace DynatestSourceGenerator;
 
 [Generator]
-public class Generator : ISourceGenerator
+public class Generator : IIncrementalGenerator
 {
     private const string GeneratedFileSuffix = ".g.cs";
     
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-/*#if DEBUG
-            if (!Debugger.IsAttached) 
-            { 
-                Debugger.Launch(); 
-            }
- #endif*/
-    }
-
-    public void Execute(GeneratorExecutionContext context)
-    {
-        var nodes = from tree in context.Compilation.SyntaxTrees
-            from node in tree.GetRoot().DescendantNodes()
-            select node;
-
-         var classDeclarationSyntaxes = nodes
-            .Select(s => s as ClassDeclarationSyntax)
-            .WhereNotNull();
-
-
-
-        foreach (var classDeclarationSyntax in classDeclarationSyntaxes)
-        {
-            var attributes = from attributeList in classDeclarationSyntax.AttributeLists
-                from attribute in attributeList.Attributes
-                select attribute;
-
-            var hasGenerateAttribute = attributes.FirstOrDefault(a => a.Name.ToString() == nameof(GenerateDto));
-            if (hasGenerateAttribute is null)
-            {
-                continue;
-            }
-
-            var originalName = classDeclarationSyntax.Identifier.ValueText;
-            var arguments = GetAttributeArguments(hasGenerateAttribute);
-            var useDynamic = ExtractBool(arguments);
-            if (!arguments.Any())
-            {
-                arguments.Add($"{originalName}DTO");
-            }
-
-            foreach (var className in arguments)
-            {
-                var ignoredProperties = GetIgnoredProperties(classDeclarationSyntax, className);
-                var getClassWithoutIgnoredProperties =
-                    classDeclarationSyntax.RemoveNodes(ignoredProperties, SyntaxRemoveOptions.KeepEndOfLine);
-                if (getClassWithoutIgnoredProperties is null)
-                {
-                    continue;
-                }
-                
-                var properties = getClassWithoutIgnoredProperties.ChildNodes()
-                    .Select(s => s as PropertyDeclarationSyntax)
-                    .WhereNotNull();
-                
-                var directives = classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
-                    .Select(s => s as UsingDirectiveSyntax)
-                    .WhereNotNull();
-                
-                var namespaces = classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
-                    .Select(s => s as NamespaceDeclarationSyntax).WhereNotNull();
-
-                var generatedClass = GenerateClass(originalName, className, namespaces, directives, properties, useDynamic);
-                context.AddSource(className+GeneratedFileSuffix, SourceText.From(generatedClass, Encoding.UTF8));
-            }
-        }
-    }
-
-    private static IEnumerable<SyntaxNode> GetIgnoredProperties(ClassDeclarationSyntax declaration, string className)
-    {
-        var ignoredProperties  = declaration.ChildNodes()
-            .OfType<PropertyDeclarationSyntax>()
-            .Where(p => p.AttributeLists.SelectMany(a => a.Attributes)
-                .Any(a => a.Name.ToString() == nameof(ExcludeProperty) && 
-                          (!GetAttributeArguments(a).Any() || GetAttributeArguments(a).Contains(className))));
-            
-        return ignoredProperties ;
-    }
-
-    private static AttributeSyntax GetUsingExistingAttribute(PropertyDeclarationSyntax property)
-    {
-        return property.AttributeLists
-            .SelectMany(a => a.Attributes)
-            .FirstOrDefault(a => a.Name.ToString() == nameof(UseExistingDto));
-    }
-    
-
-    private static List<string> GetAttributeArguments(AttributeSyntax attribute)
-    {
-        if (attribute.ArgumentList is null)
-        {
-            return new List<string>();
-        }
-            
-        var arguments = attribute.ArgumentList.Arguments
-            .Select(s => s.NormalizeWhitespace().ToFullString().Replace("\"", "")).ToList();
-
-        return arguments;
-    }
-
-    private static bool ExtractBool(IList<string> arguments)
-    {
-        if (!arguments.Any() || !bool.TryParse(arguments.First(), out var parsedValue)) return false;
-        arguments.RemoveAt(0);
-        return parsedValue;
-    }
-
-    private static string GetUsingArgument(AttributeSyntax usingSyntax, string className)
-    {
-        var argument = GetAttributeArguments(usingSyntax)
-            .Where(u => u.StartsWith(className) && u.Contains(" > "));
-        return argument.FirstOrDefault()?.Split(" > ")[1];
-    }
+        var classDeclarationSyntax =
+            context.SyntaxProvider.CreateSyntaxProvider(
+                    predicate: (node, _) => IsSyntaxTargetForGeneration(node),
+                    transform: (syntaxContext, _) => GetSemanticTargetForGeneration(syntaxContext))
+                .WhereNotNull().Collect();
         
-    private static string GenerateClass(string originalName, string className, IEnumerable<NamespaceDeclarationSyntax> namespaces, IEnumerable<UsingDirectiveSyntax> usingDirectives, 
-        IEnumerable<PropertyDeclarationSyntax> properties, bool useDynamic)
+        context.RegisterSourceOutput(classDeclarationSyntax,GenerateClass);
+
+    }
+
+    private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+    {
+        var attributeSyntax = (AttributeSyntax)context.Node;
+        if (attributeSyntax.Parent?.Parent is not ClassDeclarationSyntax classDeclarationSyntax) return null;
+
+        return classDeclarationSyntax;
+    }
+
+    private static bool IsSyntaxTargetForGeneration(SyntaxNode syntaxNode)
+    {
+        if (syntaxNode is not AttributeSyntax attributeSyntax)
+        {
+            return false;
+        }
+
+        var name = ExtractAttributeName(attributeSyntax.Name);
+
+        return name is "GenerateDto";
+
+    }
+
+    private static string ExtractAttributeName(NameSyntax? name) =>
+        name switch
+        {
+            SimpleNameSyntax simpleNameSyntax => simpleNameSyntax.Identifier.Text,
+            QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+            _ => null
+        };
+    
+    
+    private static IEnumerable<string> GetProperties(ClassDeclarationSyntax classDeclarationSyntax)
+    {
+        var props = new List<string>();
+        foreach (var child in classDeclarationSyntax.ChildNodes())
+        {
+            //todo 
+            if (child is PropertyDeclarationSyntax prop)
+            {
+                if (!prop.ToString().Contains("ExcludeFromDto") && !prop.ToString().StartsWith("private"))
+                {
+                    props.Add(prop.ToString());
+                }
+            }
+        }
+
+        return props;
+    }
+
+    private static string GenerateClass(SourceProductionContext context,
+        ImmutableArray<ClassDeclarationSyntax> enumerations)
     {
         var classBuilder = new StringBuilder();
             
         classBuilder.AppendLine("using System.Dynamic;");
         classBuilder.AppendLine("using System.Collections;");
         classBuilder.AppendLine("using SourceDto;");
-        foreach (var namespaceDirective in namespaces)
+        foreach (var namespaceDirective)
         {
             classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
         }
@@ -154,7 +100,7 @@ namespace SourceDto
     public class {className}
     {{");
             
-        foreach (var property in properties)
+        foreach (var property in enumerations.FirstOrDefault().ChildNodes())
         {
             if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
             var useExisting = GetUsingExistingAttribute(property);
@@ -215,4 +161,5 @@ namespace SourceDto
         classBuilder.AppendLine("    }");
         return classBuilder.AppendLine("}").ToString();
     }
+
 }
