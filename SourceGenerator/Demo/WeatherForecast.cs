@@ -1,22 +1,21 @@
 using System;
 using DynatestSourceGenerator.Attributes;
 
-namespace Demo
+namespace Demo;
+
+[GenerateDto("WeatherForecastDTO", "TestingWeather")]
+public class WeatherForecast
 {
-    [GenerateDto("WeatherForecastDTO", "TestingWeather")]
-    public class WeatherForecast
-    {
-        public DateTime Date { get; set; }
-        public int TemperatureC { get; set; }
+    public DateTime Date { get; set; }
+    public int TemperatureC { get; set; }
 
-        public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
+    public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
 
-        public double TemperatureK { get; } = 0 + 273.15;
+    public int TemperatureK { get; set; }
 
-        [ExcludeProperty("TestingWeather")]
-        public string Summary { get; set; }
+    [ExcludeProperty("TestingWeather")]
+    public string Summary { get; set; }
 
-        [UseExistingDto("TestingWeather > StationWithNoNameDTO")]
-        public Station Station { get; set; }
-    }
+    [UseExistingDto("TestingWeather > StationWithNoNameDTO")]
+    public Station Station { get; set; }
 }

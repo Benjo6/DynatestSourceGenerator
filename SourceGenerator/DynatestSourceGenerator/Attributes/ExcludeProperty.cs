@@ -2,7 +2,7 @@
 
 namespace DynatestSourceGenerator.Attributes;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 public class ExcludeProperty : Attribute
 {
     public ExcludeProperty(params string[] classNames)

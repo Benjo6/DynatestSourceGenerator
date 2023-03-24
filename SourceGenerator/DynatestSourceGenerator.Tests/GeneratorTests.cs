@@ -1,10 +1,14 @@
 ﻿using System.Text;
+using System.Threading.Tasks;
+using DynatestSourceGenerator.Tests.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.CodeAnalysis.Text;
 
 namespace DynatestSourceGenerator.Tests;
+
+using TestMachine = CSharpSourceGeneratorTest<Adapter<Generator>,NUnitVerifier>;
 
 [TestFixture]
 public class GeneratorTests
@@ -42,10 +46,10 @@ namespace SourceDto
 			Name = instance.Name;
 			return this;
 		}
-    }
+	}
 }
 ";
-        var test = new CSharpSourceGeneratorTest<Generator, NUnitVerifier>()
+        var test = new TestMachine
         {
             TestCode = source,
             ReferenceAssemblies = ReferenceAssemblies.Default,
@@ -59,11 +63,10 @@ namespace SourceDto
                 },
                 GeneratedSources =
                 {
-                    ((typeof(Generator)),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
+                    (typeof(Adapter<Generator>),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
                 },
             }
         };
-        
         // Act & Assert
         await test.RunAsync();
     }
@@ -100,10 +103,10 @@ namespace SourceDto
 			Id = instance.Id;
 			return this;
 		}
-    }
+	}
 }
 ";
-        var test = new CSharpSourceGeneratorTest<Generator, NUnitVerifier>()
+        var test = new TestMachine
         {
             TestCode = source,
             ReferenceAssemblies = ReferenceAssemblies.Default,
@@ -118,7 +121,7 @@ namespace SourceDto
                 },
                 GeneratedSources =
                 {
-                    ((typeof(Generator)),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
+                    (typeof(Adapter<Generator>),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
                 },
             }
         };
@@ -163,10 +166,10 @@ namespace SourceDto
 			MyClass = new MyClassDTO().Map(instance.MyClass);
 			return this;
 		}
-    }
+	}
 }
 ";
-        var test = new CSharpSourceGeneratorTest<Generator, NUnitVerifier>()
+        var test = new TestMachine
         {
             TestCode = source,
             ReferenceAssemblies = ReferenceAssemblies.Default,
@@ -180,13 +183,13 @@ namespace SourceDto
                     DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDtoAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(10, 16, 10, 23).WithArguments("MyClass"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 13, 16, 13, 26).WithArguments("MyClassDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 19, 18, 19, 28).WithArguments("MyClassDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 13, 16, 13, 26).WithArguments("MyClassDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 19, 18, 19, 28).WithArguments("MyClassDTO")
                 },
                 GeneratedSources =
                 {
-                    ((typeof(Generator)),"WeatherForecastDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
+                    (typeof(Adapter<Generator>),"WeatherForecastDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
                 },
                 MarkupHandling = MarkupMode.Allow
             }
@@ -211,7 +214,7 @@ namespace MyNamespace
         [ExcludeProperty("TestingWeather")]
         public string Summary { get; set; }
 
-        [UseExistingDto("TestingWeather > Station")]
+        [UseExistingDto("TestingWeather > Station2")]
         public Station Station { get; set; }
     }
 }
@@ -229,19 +232,19 @@ namespace SourceDto
 		public DateTime Date { get; set; }
 		public int TemperatureC { get; set; }
 		
-        public Station Station { get; set; }
+        public Station2 Station { get; set; }
 
         public TestingWeather Map(WeatherForecast instance)
         {
 			Date = instance.Date;
 			TemperatureC = instance.TemperatureC;
-			Station = new Station().Map(instance.Station);
+			Station = new Station2().Map(instance.Station);
 			return this;
 		}
-    }
+	}
 }
 ";
-        var expectedDTO =
+        var expectedDto =
             """
 using System.Dynamic;
 using System.Collections;
@@ -267,11 +270,11 @@ namespace SourceDto
 			Station = new StationDTO().Map(instance.Station);
 			return this;
 		}
-    }
+	}
 }
 
 """;
-        var test = new CSharpSourceGeneratorTest<Generator, NUnitVerifier>()
+        var test = new TestMachine
         {
             TestCode = source,
             ReferenceAssemblies = ReferenceAssemblies.Default,
@@ -280,26 +283,26 @@ namespace SourceDto
                 ExpectedDiagnostics =
                 {
                     DiagnosticResult.CompilerError("CS0246").WithSpan(3, 6, 3, 17).WithArguments("GenerateDto"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan(3, 6, 3, 17).WithArguments("GenerateDtoAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(3, 6, 3, 17).WithArguments("GenerateDtoAttribute"), 
                     DiagnosticResult.CompilerError("CS0246").WithSpan(6, 16, 6, 24).WithArguments("DateTime"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(8, 10, 8, 25).WithArguments("ExcludeProperty"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(8, 10, 8, 25).WithArguments("ExcludePropertyAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDtoAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(12, 16, 12, 23).WithArguments("Station"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\TestingWeather.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\TestingWeather.g.cs", 13, 16, 13, 23).WithArguments("Station"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\TestingWeather.g.cs", 19, 18, 19, 25).WithArguments("Station"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 12, 4, 12, 19).WithArguments("ExcludeProperty"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 12, 4, 12, 19).WithArguments("ExcludePropertyAttribute"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 15, 16, 15, 26).WithArguments("StationDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator\\DynatestSourceGenerator.Generator\\WeatherForecastDTO.g.cs", 22, 18, 22, 28).WithArguments("StationDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 13, 16, 13, 24).WithArguments("Station2"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 19, 18, 19, 26).WithArguments("Station2"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 10, 10, 18).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 4, 12, 19).WithArguments("ExcludeProperty"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 4, 12, 19).WithArguments("ExcludePropertyAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 15, 16, 15, 26).WithArguments("StationDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.Generator, DynatestSourceGenerator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 22, 18, 22, 28).WithArguments("StationDTO"),
                 },
                 GeneratedSources =
                 {
-                    (typeof(Generator),"WeatherForecastDTO.g.cs",SourceText.From(expectedDTO,Encoding.UTF8)),
-                    (typeof(Generator),"TestingWeather.g.cs",SourceText.From(expectedTestingWeather,Encoding.UTF8))
+                    (typeof(Adapter<Generator>),"WeatherForecastDTO.g.cs",SourceText.From(expectedDto,Encoding.UTF8)),
+                    (typeof(Adapter<Generator>),"TestingWeather.g.cs",SourceText.From(expectedTestingWeather,Encoding.UTF8))
                 }
             }
         };

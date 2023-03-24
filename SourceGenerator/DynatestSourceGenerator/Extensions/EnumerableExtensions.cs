@@ -6,7 +6,7 @@ namespace DynatestSourceGenerator.Extensions;
 
 public static class EnumerableExtensions
 {
-    
+
     public static IncrementalValuesProvider<T> WhereNotNull<T>(this IncrementalValuesProvider<T?> valuesProvider)
         where T : notnull
     {
@@ -14,6 +14,7 @@ public static class EnumerableExtensions
         return valuesProvider.Where(x => x != null);
 #nullable restore
     }
+
     public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> enumerable)
         where T : struct
     {
@@ -29,3 +30,4 @@ public static class EnumerableExtensions
         return enumerable.Where(x => x != null);
 #nullable restore
     }
+}

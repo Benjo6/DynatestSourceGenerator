@@ -2,7 +2,7 @@
 
 namespace DynatestSourceGenerator.Attributes;
 
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public class GenerateDto : Attribute
 {
     public GenerateDto(params string[] classNames)
