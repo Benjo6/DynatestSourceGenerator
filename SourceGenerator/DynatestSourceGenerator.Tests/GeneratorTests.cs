@@ -310,4 +310,118 @@ namespace SourceDto
         // Act & Assert
         await test.RunAsync();
     }
+    
+    [Test]
+    public async Task TestArea()
+    {
+        var source = 
+            """
+using System;
+using DynatestSourceGenerator.Attributes;
+
+namespace Demo; 
+
+[GenerateDto("WeatherForecastDTO", "TestingWeather")] 
+public class WeatherForecast
+{
+    public DateTime Date { get; set; }
+    public int TemperatureC { get; set; }
+
+    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+
+    public int TemperatureK { get; set; }
+
+    [ExcludeProperty("TestingWeather")] 
+    public string Summary { get; set; }
+
+    [UseExistingDto("TestingWeather > StationWithNoNameDTO")]
+    public Station Station { get; set; }  
+} 
+""";
+
+        var expectedTestingWeather = 
+            """
+using System.Dynamic;
+using System.Collections;
+using SourceDto;
+using System;
+using DynatestSourceGenerator.Attributes;
+
+namespace SourceDto
+{
+    public class TestingWeather
+    {
+		public DateTime Date { get; set; }
+		public int TemperatureC { get; set; }
+		public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
+		public int TemperatureK { get; set; }
+		
+        public StationWithNoNameDTO Station { get; set; }
+
+        public TestingWeather Map(WeatherForecast instance)
+        {
+			Date = instance.Date;
+			TemperatureC = instance.TemperatureC;
+			TemperatureK = instance.TemperatureK;
+			Station = new StationWithNoNameDTO().Map(instance.Station);
+			return this;
+		}
+	}
+} 
+""";
+        var expectedDto =
+            """
+using System.Dynamic;
+using System.Collections;
+using SourceDto;
+using System;
+using DynatestSourceGenerator.Attributes;
+
+namespace SourceDto
+{
+    public class WeatherForecastDTO
+    {
+		public DateTime Date { get; set; }
+		public int TemperatureC { get; set; }
+		public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
+		public int TemperatureK { get; set; }
+		[ExcludeProperty("TestingWeather")]
+        public string Summary { get; set; }
+		
+        public StationDTO Station { get; set; }
+
+        public WeatherForecastDTO Map(WeatherForecast instance)
+        {
+			Date = instance.Date;
+			TemperatureC = instance.TemperatureC;
+			TemperatureK = instance.TemperatureK;
+			Summary = instance.Summary;
+			Station = new StationDTO().Map(instance.Station);
+			return this;
+		}
+	}
+} 
+
+""";
+        var test = new TestMachine
+        {
+            TestCode = source,
+            ReferenceAssemblies = ReferenceAssemblies.Default,
+            TestState =
+            {
+                ExpectedDiagnostics =
+                {
+                },
+                GeneratedSources =
+                {
+                    (typeof(Adapter<Generator>),"WeatherForecastDTO.g.cs",SourceText.From(expectedDto,Encoding.UTF8)),
+                    (typeof(Adapter<Generator>),"TestingWeather.g.cs",SourceText.From(expectedTestingWeather,Encoding.UTF8))
+                }
+            }
+        };
+        
+        // Act & Assert
+        await test.RunAsync();
+    }
 }
+

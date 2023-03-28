@@ -11,7 +11,7 @@ using PropertyDeclarationSyntax = Microsoft.CodeAnalysis.CSharp.Syntax.PropertyD
 
 namespace DynatestSourceGenerator;
 
-[Generator]
+[Generator(LanguageNames.CSharp)]
 public class Generator : IIncrementalGenerator
 {
     private const string GeneratedFileSuffix = ".g.cs";
@@ -84,10 +84,7 @@ public class Generator : IIncrementalGenerator
                 classBuilder.AppendLine("using System.Dynamic;");
                 classBuilder.AppendLine("using System.Collections;");
                 classBuilder.AppendLine("using SourceDto;");
-                foreach (var namespaceDirective in NamespaceDirectives(classDeclarationSyntax))
-                {
-                    classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
-                }
+                AppendNamespacesToFile(classDeclarationSyntax, classBuilder);
 
                 foreach (var usingDirective in UsingDirectives(classDeclarationSyntax))
                 {
@@ -127,6 +124,23 @@ namespace SourceDto
         }
     }
 
+    private static void AppendNamespacesToFile(ClassDeclarationSyntax classDeclarationSyntax, StringBuilder classBuilder)
+    {
+        if (NamespaceDirectives(classDeclarationSyntax) != null && NamespaceDirectives(classDeclarationSyntax).Any())
+        {
+            foreach (var namespaceDirective in NamespaceDirectives(classDeclarationSyntax))
+            {
+                classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
+            }
+        }
+        else
+        {
+            foreach (var namespaceDirective in FileScopedNamespaceDirectives(classDeclarationSyntax))
+            {
+                classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
+            }
+        }
+    }
 
 
     private static IEnumerable<UsingDirectiveSyntax> UsingDirectives(ClassDeclarationSyntax classDeclarationSyntax)
@@ -139,6 +153,13 @@ namespace SourceDto
     {
         return classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
             .Select(s => s as NamespaceDeclarationSyntax).WhereNotNull();
+    }
+
+    private static IEnumerable<FileScopedNamespaceDeclarationSyntax> FileScopedNamespaceDirectives(
+        ClassDeclarationSyntax classDeclarationSyntax)
+    {
+        return classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
+            .Select(s => s as FileScopedNamespaceDeclarationSyntax).WhereNotNull();
     }
 
     private static List<string> GetMappingProperties(BaseTypeDeclarationSyntax classDeclarationSyntax, string className)
