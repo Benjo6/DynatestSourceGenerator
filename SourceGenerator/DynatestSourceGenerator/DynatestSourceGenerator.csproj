@@ -7,8 +7,11 @@
         <Version>0.0.1</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
-        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <Authors>Benjamin Curovic</Authors>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<!-- Generates a package at build -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<!-- Do not include the generator as a lib dependency -->
+		<Authors>Benjamin Curovic</Authors>
         <Company>Dynatest</Company>
         <Product>Source Generator</Product>
         <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. The DTOs are generated with properties that mirror the properties of the original class, but they may exclude certain properties, as specified by another attribute. The generator also includes a Map method in the DTO that takes an instance of the original class and maps its properties to the corresponding properties in the DTO.
@@ -19,11 +22,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Include="..\..\..\..\Downloads\Dynatest Source Generator.md">
-        <Pack>True</Pack>
-        <PackagePath>\</PackagePath>
-      </None>
-    </ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
