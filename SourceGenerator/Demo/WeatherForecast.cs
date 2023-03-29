@@ -1,5 +1,5 @@
 using System;
-using DynatestSourceGenerator.Attributes;
+using DynatestSourceGenerator.DataTransferObject.Attributes;
 
 namespace Demo;
 
@@ -13,7 +13,8 @@ public class WeatherForecast
 
     public int TemperatureK { get; set; }
 
-    [ExcludeProperty("TestingWeather")] public string Summary { get; set; }
+    [ExcludeProperty("TestingWeather")] 
+    public string Summary { get; set; }
 
     [UseExistingDto("TestingWeather > StationWithNoNameDTO")]
     public Station Station { get; set; }

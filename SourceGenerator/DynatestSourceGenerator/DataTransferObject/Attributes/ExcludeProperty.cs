@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynatestSourceGenerator.Attributes;
+namespace DynatestSourceGenerator.DataTransferObject.Attributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 public class ExcludeProperty : Attribute

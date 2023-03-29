@@ -2,13 +2,12 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace DynatestSourceGenerator.Extensions;
+namespace DynatestSourceGenerator.DataTransferObject.Extensions;
 
 public static class EnumerableExtensions
 {
 
-    public static IncrementalValuesProvider<T> WhereNotNull<T>(this IncrementalValuesProvider<T?> valuesProvider)
-        where T : notnull
+    public static IncrementalValuesProvider<T> WhereNotNull<T>(this IncrementalValuesProvider<T> valuesProvider)
     {
 #nullable disable
         return valuesProvider.Where(x => x != null);
@@ -23,8 +22,7 @@ public static class EnumerableExtensions
 #nullable restore
     }
 
-    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> enumerable)
-        where T : notnull
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> enumerable)
     {
 #nullable disable
         return enumerable.Where(x => x != null);

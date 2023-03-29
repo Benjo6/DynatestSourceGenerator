@@ -1,4 +1,4 @@
-﻿namespace DynatestSourceGenerator.Enums;
+﻿namespace DynatestSourceGenerator.DataTransferObject.Enums;
 
 public enum DataStructureType
 {

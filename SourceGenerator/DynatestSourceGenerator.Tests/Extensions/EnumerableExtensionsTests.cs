@@ -1,4 +1,4 @@
-﻿using DynatestSourceGenerator.Extensions;
+﻿using DynatestSourceGenerator.DataTransferObject.Extensions;
 using FluentAssertions;
 
 namespace DynatestSourceGenerator.Tests.Extensions;

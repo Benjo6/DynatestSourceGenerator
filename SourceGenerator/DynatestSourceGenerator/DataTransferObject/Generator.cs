@@ -1,23 +1,28 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using DynatestSourceGenerator.Extensions;
+using DynatestSourceGenerator.DataTransferObject.Attributes;
+using DynatestSourceGenerator.DataTransferObject.Enums;
+using DynatestSourceGenerator.DataTransferObject.Extensions;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using DynatestSourceGenerator.Attributes;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using PropertyDeclarationSyntax = Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax;
 
-namespace DynatestSourceGenerator;
+namespace DynatestSourceGenerator.DataTransferObject;
 
 [Generator(LanguageNames.CSharp)]
-public class Generator : IIncrementalGenerator
+public class DataObjectGenerator : IIncrementalGenerator
 {
+
     private const string GeneratedFileSuffix = ".g.cs";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+
         var classDeclarationSyntax =
             context.SyntaxProvider.CreateSyntaxProvider(
                     predicate: (node, _) => IsSyntaxTargetForGeneration(node),
@@ -30,9 +35,7 @@ public class Generator : IIncrementalGenerator
     private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
     {
         var attributeSyntax = (AttributeSyntax)context.Node;
-        if (attributeSyntax.Parent?.Parent is not ClassDeclarationSyntax classDeclarationSyntax) return null;
-
-        return classDeclarationSyntax;
+        return attributeSyntax.Parent?.Parent is not ClassDeclarationSyntax classDeclarationSyntax ? null : classDeclarationSyntax;
     }
 
     private static bool IsSyntaxTargetForGeneration(SyntaxNode syntaxNode)
@@ -48,28 +51,29 @@ public class Generator : IIncrementalGenerator
     }
 
     private static string ExtractAttributeName(NameSyntax? name) =>
-        name switch
+        (name switch
         {
             SimpleNameSyntax simpleNameSyntax => simpleNameSyntax.Identifier.Text,
             QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
             _ => null
-        };
+        })!;
 
     private static void GenerateClass(SourceProductionContext context,
         ImmutableArray<ClassDeclarationSyntax?> enumerations)
     {
         foreach (var classDeclarationSyntax in enumerations)
         {
-            var attributes = from attributeList in classDeclarationSyntax.AttributeLists
+            var attributes = from attributeList in classDeclarationSyntax!.AttributeLists
                 from attribute in attributeList.Attributes
                 select attribute;
-            
+
             var hasGenerateAttribute = attributes.FirstOrDefault(a => a.Name.ToString() == nameof(GenerateDto));
             if (hasGenerateAttribute is null)
             {
                 continue;
             }
-            
+
+
             var arguments = GetAttributeArguments(hasGenerateAttribute);
             if (!arguments.Any())
             {
@@ -80,7 +84,7 @@ public class Generator : IIncrementalGenerator
             {
                 var classWithoutExcludedProperties = RemoveExcludedProperties(classDeclarationSyntax,className);
                 var classBuilder = new StringBuilder();
-
+                
                 classBuilder.AppendLine("using System.Dynamic;");
                 classBuilder.AppendLine("using System.Collections;");
                 classBuilder.AppendLine("using SourceDto;");
@@ -88,32 +92,30 @@ public class Generator : IIncrementalGenerator
 
                 foreach (var usingDirective in UsingDirectives(classDeclarationSyntax))
                 {
-                    classBuilder.AppendLine(usingDirective.ToString());
+                    classBuilder.AppendLine(usingDirective!.ToString());
                 }
 
 
                 classBuilder.AppendLine($@"
-namespace SourceDto
-{{
-    public class {className}
-    {{");
+namespace SourceDto;
+public record class {className}
+{{");
                 foreach (var property in GetProperties(classWithoutExcludedProperties, className))
+                {
+                    classBuilder.AppendLine($"\t{property}");
+                }
+
+                var param = classWithoutExcludedProperties!.Identifier.ValueText;
+                classBuilder.AppendLine($@"
+    public {className} Map({param} instance)
+    {{");
+                foreach (var property in GetMappingProperties(classWithoutExcludedProperties,className))
                 {
                     classBuilder.AppendLine($"\t\t{property}");
                 }
 
-                var param = classWithoutExcludedProperties.Identifier.ValueText;
-                classBuilder.AppendLine($@"
-        public {className} Map({param} instance)
-        {{");
-                foreach (var property in GetMappingProperties(classWithoutExcludedProperties,className))
-                {
-                    classBuilder.AppendLine($"\t\t\t{property}");
-                }
+                classBuilder.AppendLine("\t\treturn this;");
 
-                classBuilder.AppendLine("\t\t\treturn this;");
-
-                classBuilder.AppendLine("\t\t}");
                 classBuilder.AppendLine("\t}");
                 classBuilder.AppendLine("}");
 
@@ -130,42 +132,42 @@ namespace SourceDto
         {
             foreach (var namespaceDirective in NamespaceDirectives(classDeclarationSyntax))
             {
-                classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
+                classBuilder.AppendLine($"using {namespaceDirective!.Name.ToString()};");
             }
         }
         else
         {
             foreach (var namespaceDirective in FileScopedNamespaceDirectives(classDeclarationSyntax))
             {
-                classBuilder.AppendLine($"using {namespaceDirective.Name.ToString()};");
+                classBuilder.AppendLine($"using {namespaceDirective!.Name.ToString()};");
             }
         }
     }
 
 
-    private static IEnumerable<UsingDirectiveSyntax> UsingDirectives(ClassDeclarationSyntax classDeclarationSyntax)
+    private static IEnumerable<UsingDirectiveSyntax?> UsingDirectives(SyntaxNode classDeclarationSyntax)
     {
         return classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
             .Select(s => s as UsingDirectiveSyntax).WhereNotNull();
     }
 
-    private static IEnumerable<NamespaceDeclarationSyntax> NamespaceDirectives(ClassDeclarationSyntax classDeclarationSyntax)
+    private static IEnumerable<NamespaceDeclarationSyntax?> NamespaceDirectives(SyntaxNode classDeclarationSyntax)
     {
         return classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
             .Select(s => s as NamespaceDeclarationSyntax).WhereNotNull();
     }
 
-    private static IEnumerable<FileScopedNamespaceDeclarationSyntax> FileScopedNamespaceDirectives(
+    private static IEnumerable<FileScopedNamespaceDeclarationSyntax?> FileScopedNamespaceDirectives(
         ClassDeclarationSyntax classDeclarationSyntax)
     {
         return classDeclarationSyntax.SyntaxTree.GetRoot().DescendantNodes()
             .Select(s => s as FileScopedNamespaceDeclarationSyntax).WhereNotNull();
     }
 
-    private static List<string> GetMappingProperties(BaseTypeDeclarationSyntax classDeclarationSyntax, string className)
+    private static List<string> GetMappingProperties(SyntaxNode? classDeclarationSyntax, string className)
     {
         var props = new List<string>();
-        foreach (var property in classDeclarationSyntax.ChildNodes())
+        foreach (var property in classDeclarationSyntax!.ChildNodes())
         {
             if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
             
@@ -194,10 +196,10 @@ namespace SourceDto
         return props;
     }
 
-    private static IEnumerable<string> GetProperties(BaseTypeDeclarationSyntax classDeclarationSyntax, string className)
+    private static IEnumerable<string> GetProperties(SyntaxNode? classDeclarationSyntax, string className)
     {
         var props = new List<string>();
-        foreach (var property in classDeclarationSyntax.ChildNodes())
+        foreach (var property in classDeclarationSyntax!.ChildNodes())
         {
             if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
             
@@ -215,6 +217,11 @@ namespace SourceDto
                             a.Kind() != SyntaxKind.SetAccessorDeclaration))
                 {
                 }
+                else if (propertyDeclaration.ToString().StartsWith("["))
+                {
+                    var prop1 = propertyDeclaration.ToString().Split("\r\n");
+                    props.Add($"{prop1.First()}\r\n\t{prop1.Last().TrimStart()}");
+                }
                 else
                 {
                     props.Add($"{propertyDeclaration}");
@@ -224,7 +231,7 @@ namespace SourceDto
             {
                 var replace = GetUsingArgument(useExisting, className);
                 var dto = propertyDeclaration.ToString().GetLastPart("]")
-                    .ReplaceFirst(propertyDeclaration.Type.ToString(), replace ?? $"{propertyDeclaration.Type}DTO");
+                    .ReplaceFirst(propertyDeclaration.Type.ToString(), replace ?? $"{propertyDeclaration.Type}DTO").TrimStart();
 
                 props.Add($"{dto}");
             }
@@ -234,7 +241,7 @@ namespace SourceDto
     }
     
 
-    private static string GetUsingArgument(AttributeSyntax usingSyntax, string className)
+    private static string? GetUsingArgument(AttributeSyntax usingSyntax, string className)
     {
         var argument = GetAttributeArguments(usingSyntax)
             .Where(u => u.StartsWith(className) && u.Contains(" > "));
@@ -254,7 +261,7 @@ namespace SourceDto
         return arguments;
     }
 
-    private static AttributeSyntax GetUsingExistingAttribute(PropertyDeclarationSyntax property)
+    private static AttributeSyntax? GetUsingExistingAttribute(MemberDeclarationSyntax property)
     {
         return property.AttributeLists
             .SelectMany(a => a.Attributes)
@@ -262,7 +269,7 @@ namespace SourceDto
     }
     
     
-    private static ClassDeclarationSyntax RemoveExcludedProperties(ClassDeclarationSyntax classDeclaration, string className)
+    private static ClassDeclarationSyntax? RemoveExcludedProperties(ClassDeclarationSyntax classDeclaration, string className)
     {
         var ignoredProperties  = classDeclaration.ChildNodes()
             .OfType<PropertyDeclarationSyntax>()
@@ -275,4 +282,8 @@ namespace SourceDto
         
         return getClassWithoutIgnoredProperties;
     }
+    
+
+    
+   
 }

@@ -1,6 +1,7 @@
 ﻿using System;
+using DynatestSourceGenerator.DataTransferObject.Enums;
 
-namespace DynatestSourceGenerator.Attributes;
+namespace DynatestSourceGenerator.DataTransferObject.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public class GenerateDto : Attribute
@@ -9,13 +10,6 @@ public class GenerateDto : Attribute
     {
         ClassNames = classNames;
     }
-        
-    public GenerateDto(bool useDynamic, params string[] classNames)
-    {
-        UseDynamic = useDynamic;
-        ClassNames = classNames;
-    }
 
-    public bool UseDynamic { get; set; }
     public string[] ClassNames { get; set; }
 }

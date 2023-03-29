@@ -1,11 +1,11 @@
-﻿using DynatestSourceGenerator.Attributes;
+﻿using DynatestSourceGenerator.DataTransferObject.Attributes;
 
 namespace Demo
 {
     [GenerateDto("StationDTO", "StationWithNoNameDTO")]
     public class Station
     {
-        [ExcludeProperty("StationWithNoNameDTO")]
+        [ExcludeProperty("StationWithNoNameDTO")] 
         public string Name { get; set; }
 
         public int Level { get; set; }

@@ -1,4 +1,4 @@
-﻿using DynatestSourceGenerator.Extensions;
+﻿using DynatestSourceGenerator.DataTransferObject.Extensions;
 
 namespace DynatestSourceGenerator.Tests.Extensions;
 
