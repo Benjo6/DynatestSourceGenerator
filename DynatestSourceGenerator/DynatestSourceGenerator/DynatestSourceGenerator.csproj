@@ -1,28 +1,30 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+		<EnablePackageValidation>true</EnablePackageValidation>
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.3</Version>
+        <Version>0.0.3.7</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Authors>Benjamin Curovic</Authors>
         <Company>Dynatest</Company>
         <Product>Source Generator</Product>
         <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. </Description>
-        <PackAsTool>False</PackAsTool>
+        <PackAsTool>false</PackAsTool>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <PackageIcon>dynatest-vector-logo-2022.png</PackageIcon>
         <PackageReadmeFile>Dynatest Source Generator.md</PackageReadmeFile>
         <EnableNETAnalyzers>True</EnableNETAnalyzers>
-        <AnalysisLevel>latest-recommended</AnalysisLevel>
-    </PropertyGroup>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
+	</PropertyGroup>
 
     <ItemGroup>
-		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
 		<None Include="..\..\..\..\..\Downloads\Dynatest Source Generator.md">
 		  <Pack>True</Pack>
 		  <PackagePath>\</PackagePath>
@@ -41,4 +43,13 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
     </ItemGroup>
 
+
+	<ItemGroup>
+		<None Remove="bin\Debug\netstandard2.0\\DynatestSourceGenerator.dll" />
+		<None Remove="bin\Release\netstandard2.0\\DynatestSourceGenerator.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
+	</ItemGroup>
 </Project>
