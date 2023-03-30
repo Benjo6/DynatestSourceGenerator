@@ -1,5 +1,4 @@
 ﻿using System;
-using DynatestSourceGenerator.DataTransferObject.Enums;
 
 namespace DynatestSourceGenerator.DataTransferObject.Attributes;
 

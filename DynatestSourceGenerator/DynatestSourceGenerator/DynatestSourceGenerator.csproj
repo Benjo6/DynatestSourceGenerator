@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
         <Version>0.0.3</Version>
@@ -11,14 +11,26 @@
 		<Authors>Benjamin Curovic</Authors>
         <Company>Dynatest</Company>
         <Product>Source Generator</Product>
-        <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. The DTOs are generated with properties that mirror the properties of the original class, but they may exclude certain properties, as specified by another attribute. The generator also includes a Map method in the DTO that takes an instance of the original class and maps its properties to the corresponding properties in the DTO</Description>
+        <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. </Description>
         <PackAsTool>False</PackAsTool>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <PackageIcon>dynatest-vector-logo-2022.png</PackageIcon>
+        <PackageReadmeFile>Dynatest Source Generator.md</PackageReadmeFile>
+        <EnableNETAnalyzers>True</EnableNETAnalyzers>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
-	  <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
+		<None Include="..\..\..\..\..\Downloads\Dynatest Source Generator.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\..\..\..\Downloads\dynatest-vector-logo-2022.png">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
 
     <ItemGroup>
