@@ -4,32 +4,21 @@
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.1</Version>
+        <Version>0.0.3</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<Authors>Benjamin Curovic</Authors>
         <Company>Dynatest</Company>
         <Product>Source Generator</Product>
-        <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. The DTOs are generated with properties that mirror the properties of the original class, but they may exclude certain properties, as specified by another attribute. The generator also includes a Map method in the DTO that takes an instance of the original class and maps its properties to the corresponding properties in the DTO.
-
-</Description>
-        <PackageReadmeFile>Dynatest Source Generator.md</PackageReadmeFile>
+        <Description>Dynatest Source Generator is a C# source generator that generates Data Transfer Objects (DTOs) from classes with a specific attribute. The DTOs are generated with properties that mirror the properties of the original class, but they may exclude certain properties, as specified by another attribute. The generator also includes a Map method in the DTO that takes an instance of the original class and maps its properties to the corresponding properties in the DTO</Description>
         <PackAsTool>False</PackAsTool>
-        <PackageIcon>dynatest-vector-logo-2022.png</PackageIcon>
-        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
 
     <ItemGroup>
-      <None Include="..\..\..\..\Downloads\dynatest-vector-logo-2022.png">
-        <Pack>True</Pack>
-        <PackagePath>\</PackagePath>
-      </None>
-      <None Include="..\..\..\..\Downloads\Dynatest Source Generator.md">
-        <Pack>True</Pack>
-        <PackagePath>\</PackagePath>
-      </None>
+	  <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
     <ItemGroup>
@@ -37,7 +26,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
