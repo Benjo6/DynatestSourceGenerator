@@ -5,10 +5,10 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.3.7</Version>
+        <Version>0.0.4.0</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Benjamin Curovic</Authors>
         <Company>Dynatest</Company>
         <Product>Source Generator</Product>
@@ -18,7 +18,6 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <PackageIcon>dynatest-vector-logo-2022.png</PackageIcon>
         <PackageReadmeFile>Dynatest Source Generator.md</PackageReadmeFile>
-        <EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
@@ -50,6 +49,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)\$(AssemblyName).Abstractions.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
+
 	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\DynatestSourceGenerator.Abstractions\DynatestSourceGenerator.Abstractions.csproj" />
+	</ItemGroup>
+
 </Project>

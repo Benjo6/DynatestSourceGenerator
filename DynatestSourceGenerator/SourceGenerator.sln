@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "Demo\Demo.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynatestSourceGenerator.Tests", "DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.csproj", "{C362FC85-2D6C-403C-8BD6-6FE7847B58D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynatestSourceGenerator.Abstractions", "DynatestSourceGenerator.Abstractions\DynatestSourceGenerator.Abstractions.csproj", "{F6A7A625-68EE-40DC-91CC-EC49B74F1659}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C362FC85-2D6C-403C-8BD6-6FE7847B58D3}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{C362FC85-2D6C-403C-8BD6-6FE7847B58D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C362FC85-2D6C-403C-8BD6-6FE7847B58D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6A7A625-68EE-40DC-91CC-EC49B74F1659}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{F6A7A625-68EE-40DC-91CC-EC49B74F1659}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{F6A7A625-68EE-40DC-91CC-EC49B74F1659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6A7A625-68EE-40DC-91CC-EC49B74F1659}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

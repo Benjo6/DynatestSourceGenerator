@@ -1,4 +1,4 @@
-﻿using DynatestSourceGenerator.DataTransferObject.Attributes;
+﻿using DynatestSourceGenerator.Abstractions.Attributes;
 
 namespace DynatestSourceGenerator.Tests.Attributes;
 

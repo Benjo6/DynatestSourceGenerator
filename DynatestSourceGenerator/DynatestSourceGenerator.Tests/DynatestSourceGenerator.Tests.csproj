@@ -21,6 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DynatestSourceGenerator.Abstractions\DynatestSourceGenerator.Abstractions.csproj" />
       <ProjectReference Include="..\DynatestSourceGenerator\DynatestSourceGenerator.csproj" />
     </ItemGroup>
 

@@ -40,11 +40,29 @@ public record class MyClassDTO
 	public int Id { get; set; }
 	public string Name { get; set; }
 
-    public MyClassDTO Map(MyClass instance)
+    /// <summary>
+    /// Maps a <see cref=""MyClass""/> instance to a <see cref=""MyClassDTO""/> instance.
+    /// </summary>
+    /// <param name=""instance"">The <see cref=""MyClass""/> instance to map.</param>
+    /// <returns>The mapped <see cref=""MyClassDTO""/> instance.</returns>
+    public MyClassDTO MapFrom(MyClass instance)
     {
 		Id = instance.Id;
 		Name = instance.Name;
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref=""MyClassDTO""/> instance to a <see cref=""MyClass""/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref=""MyClass""/> instance.</returns>
+    public MyClass MapTo()
+    {
+		return new MyClass
+		{
+			Id = Id,
+			Name = Name,
+		};
 	}
 }
 ";
@@ -58,6 +76,52 @@ public record class MyClassDTO
                 {
                     DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDtoAttribute"),
+
+                },
+                GeneratedSources =
+                {
+                    (typeof(Adapter<DataObjectGenerator>),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
+                },
+            }
+        };
+        // Act & Assert
+        await test.RunAsync();
+    }
+
+    [Test]
+    public async Task GeneratorShouldGenerate_EmptyDto()
+    {
+        var source = @"
+
+                namespace MyNamespace
+                {
+                    [GenerateDto()]
+                    public class MyClass
+                    {
+
+                    }
+                }";
+
+        var expected = @"using System.Dynamic;
+using System.Collections;
+using SourceDto;
+using MyNamespace;
+
+namespace SourceDto;
+public record class MyClassDTO
+{
+}
+";
+        var test = new TestMachine
+        {
+            TestCode = source,
+            ReferenceAssemblies = ReferenceAssemblies.Default,
+            TestState =
+            {
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDto"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDtoAttribute")
 
                 },
                 GeneratedSources =
@@ -96,10 +160,27 @@ public record class MyClassDTO
 {
 	public int Id { get; set; }
 
-    public MyClassDTO Map(MyClass instance)
+    /// <summary>
+    /// Maps a <see cref=""MyClass""/> instance to a <see cref=""MyClassDTO""/> instance.
+    /// </summary>
+    /// <param name=""instance"">The <see cref=""MyClass""/> instance to map.</param>
+    /// <returns>The mapped <see cref=""MyClassDTO""/> instance.</returns>
+    public MyClassDTO MapFrom(MyClass instance)
     {
 		Id = instance.Id;
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref=""MyClassDTO""/> instance to a <see cref=""MyClass""/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref=""MyClass""/> instance.</returns>
+    public MyClass MapTo()
+    {
+		return new MyClass
+		{
+			Id = Id,
+		};
 	}
 }
 ";
@@ -154,12 +235,31 @@ public record class WeatherForecastDTO
 	public int TemperatureC { get; set; }
 	public MyClassDTO MyClass { get; set; }
 
-    public WeatherForecastDTO Map(WeatherForecast instance)
+    /// <summary>
+    /// Maps a <see cref=""WeatherForecast""/> instance to a <see cref=""WeatherForecastDTO""/> instance.
+    /// </summary>
+    /// <param name=""instance"">The <see cref=""WeatherForecast""/> instance to map.</param>
+    /// <returns>The mapped <see cref=""WeatherForecastDTO""/> instance.</returns>
+    public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
 		Date = instance.Date;
 		TemperatureC = instance.TemperatureC;
-		MyClass = new MyClassDTO().Map(instance.MyClass);
+		MyClass = new MyClassDTO().MapFrom(instance.MyClass);
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref=""WeatherForecastDTO""/> instance to a <see cref=""WeatherForecast""/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref=""WeatherForecast""/> instance.</returns>
+    public WeatherForecast MapTo()
+    {
+		return new WeatherForecast
+		{
+			Date = Date,
+			TemperatureC = TemperatureC,
+			MyClass = MyClass.MapTo(),
+		};
 	}
 }
 ";
@@ -177,9 +277,9 @@ public record class WeatherForecastDTO
                     DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDtoAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(10, 16, 10, 23).WithArguments("MyClass"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 9, 11, 19).WithArguments("MyClassDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 17, 17, 17, 27).WithArguments("MyClassDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 9, 11, 19).WithArguments("MyClassDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 22, 17, 22, 27).WithArguments("MyClassDTO"),
                 },
                 GeneratedSources =
                 {
@@ -226,12 +326,31 @@ public record class TestingWeather
 	public int TemperatureC { get; set; }
 	public Station2 Station { get; set; }
 
-    public TestingWeather Map(WeatherForecast instance)
+    /// <summary>
+    /// Maps a <see cref=""WeatherForecast""/> instance to a <see cref=""TestingWeather""/> instance.
+    /// </summary>
+    /// <param name=""instance"">The <see cref=""WeatherForecast""/> instance to map.</param>
+    /// <returns>The mapped <see cref=""TestingWeather""/> instance.</returns>
+    public TestingWeather MapFrom(WeatherForecast instance)
     {
 		Date = instance.Date;
 		TemperatureC = instance.TemperatureC;
-		Station = new Station2().Map(instance.Station);
+		Station = new Station2().MapFrom(instance.Station);
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref=""TestingWeather""/> instance to a <see cref=""WeatherForecast""/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref=""WeatherForecast""/> instance.</returns>
+    public WeatherForecast MapTo()
+    {
+		return new WeatherForecast
+		{
+			Date = Date,
+			TemperatureC = TemperatureC,
+			Station = Station.MapTo(),
+		};
 	}
 }
 ";
@@ -251,13 +370,33 @@ public record class WeatherForecastDTO
 	public string Summary { get; set; }
 	public StationDTO Station { get; set; }
 
-    public WeatherForecastDTO Map(WeatherForecast instance)
+    /// <summary>
+    /// Maps a <see cref="WeatherForecast"/> instance to a <see cref="WeatherForecastDTO"/> instance.
+    /// </summary>
+    /// <param name="instance">The <see cref="WeatherForecast"/> instance to map.</param>
+    /// <returns>The mapped <see cref="WeatherForecastDTO"/> instance.</returns>
+    public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
 		Date = instance.Date;
 		TemperatureC = instance.TemperatureC;
 		Summary = instance.Summary;
-		Station = new StationDTO().Map(instance.Station);
+		Station = new StationDTO().MapFrom(instance.Station);
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref="WeatherForecastDTO"/> instance to a <see cref="WeatherForecast"/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref="WeatherForecast"/> instance.</returns>
+    public WeatherForecast MapTo()
+    {
+		return new WeatherForecast
+		{
+			Date = Date,
+			TemperatureC = TemperatureC,
+			Summary = Summary,
+			Station = Station.MapTo(),
+		};
 	}
 }
 
@@ -278,14 +417,15 @@ public record class WeatherForecastDTO
                     DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDtoAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(12, 16, 12, 23).WithArguments("Station"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 11, 9, 11, 17).WithArguments("Station2"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 17, 17, 17, 25).WithArguments("Station2"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 3, 11, 18).WithArguments("ExcludeProperty"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 3, 11, 18).WithArguments("ExcludePropertyAttribute"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 13, 9, 13, 19).WithArguments("StationDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 20, 17, 20, 27).WithArguments("StationDTO")
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 11, 9, 11, 17).WithArguments("Station2"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 22, 17, 22, 25).WithArguments("Station2"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 9, 9, 9, 17).WithArguments("DateTime"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 3, 11, 18).WithArguments("ExcludeProperty"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 11, 3, 11, 18).WithArguments("ExcludePropertyAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 13, 9, 13, 19).WithArguments("StationDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 25, 17, 25, 27).WithArguments("StationDTO"),
+
                 },
                 GeneratedSources =
                 {
@@ -345,13 +485,33 @@ public record class TestingWeather
 	public int TemperatureK { get; set; }
 	public StationWithNoNameDTO Station { get; set; }
 
-    public TestingWeather Map(WeatherForecast instance)
+    /// <summary>
+    /// Maps a <see cref="WeatherForecast"/> instance to a <see cref="TestingWeather"/> instance.
+    /// </summary>
+    /// <param name="instance">The <see cref="WeatherForecast"/> instance to map.</param>
+    /// <returns>The mapped <see cref="TestingWeather"/> instance.</returns>
+    public TestingWeather MapFrom(WeatherForecast instance)
     {
 		Date = instance.Date;
 		TemperatureC = instance.TemperatureC;
 		TemperatureK = instance.TemperatureK;
-		Station = new StationWithNoNameDTO().Map(instance.Station);
+		Station = new StationWithNoNameDTO().MapFrom(instance.Station);
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref="TestingWeather"/> instance to a <see cref="WeatherForecast"/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref="WeatherForecast"/> instance.</returns>
+    public WeatherForecast MapTo()
+    {
+		return new WeatherForecast
+		{
+			Date = Date,
+			TemperatureC = TemperatureC,
+			TemperatureK = TemperatureK,
+			Station = Station.MapTo(),
+		};
 	}
 }
 
@@ -376,14 +536,35 @@ public record class WeatherForecastDTO
 	public string Summary { get; set; }
 	public StationDTO Station { get; set; }
 
-    public WeatherForecastDTO Map(WeatherForecast instance)
+    /// <summary>
+    /// Maps a <see cref="WeatherForecast"/> instance to a <see cref="WeatherForecastDTO"/> instance.
+    /// </summary>
+    /// <param name="instance">The <see cref="WeatherForecast"/> instance to map.</param>
+    /// <returns>The mapped <see cref="WeatherForecastDTO"/> instance.</returns>
+    public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
 		Date = instance.Date;
 		TemperatureC = instance.TemperatureC;
 		TemperatureK = instance.TemperatureK;
 		Summary = instance.Summary;
-		Station = new StationDTO().Map(instance.Station);
+		Station = new StationDTO().MapFrom(instance.Station);
 		return this;
+	}
+
+    /// <summary>
+    /// Maps a <see cref="WeatherForecastDTO"/> instance to a <see cref="WeatherForecast"/> instance.
+    /// </summary>
+    /// <returns>The mapped <see cref="WeatherForecast"/> instance.</returns>
+    public WeatherForecast MapTo()
+    {
+		return new WeatherForecast
+		{
+			Date = Date,
+			TemperatureC = TemperatureC,
+			TemperatureK = TemperatureK,
+			Summary = Summary,
+			Station = Station.MapTo(),
+		};
 	}
 }
 
@@ -404,14 +585,14 @@ public record class WeatherForecastDTO
                     DiagnosticResult.CompilerError("CS0246").WithSpan(19, 6, 19, 20).WithArguments("UseExistingDto"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(19, 6, 19, 20).WithArguments("UseExistingDtoAttribute"),
                     DiagnosticResult.CompilerError("CS0246").WithSpan(20, 12, 20, 19).WithArguments("Station"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 6, 7, 6, 30).WithArguments("DynatestSourceGenerator"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 15, 9, 15, 29).WithArguments("StationWithNoNameDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 22, 17, 22, 37).WithArguments("StationWithNoNameDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 6, 7, 6, 30).WithArguments("DynatestSourceGenerator"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 15, 3, 15, 18).WithArguments("ExcludeProperty"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 15, 3, 15, 18).WithArguments("ExcludePropertyAttribute"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 17, 9, 17, 19).WithArguments("StationDTO"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.3.7, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 25, 17, 25, 27).WithArguments("StationDTO")
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 6, 7, 6, 30).WithArguments("DynatestSourceGenerator"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 15, 9, 15, 29).WithArguments("StationWithNoNameDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 27, 17, 27, 37).WithArguments("StationWithNoNameDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 6, 7, 6, 30).WithArguments("DynatestSourceGenerator"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 15, 3, 15, 18).WithArguments("ExcludeProperty"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 15, 3, 15, 18).WithArguments("ExcludePropertyAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 17, 9, 17, 19).WithArguments("StationDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.0, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 30, 17, 30, 27).WithArguments("StationDTO"),
                 },
                 GeneratedSources =
                 {
