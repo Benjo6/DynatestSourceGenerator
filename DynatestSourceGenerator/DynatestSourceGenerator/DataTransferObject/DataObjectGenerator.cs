@@ -80,9 +80,8 @@ public class DataObjectGenerator : IIncrementalGenerator
                 var classWithoutExcludedProperties =
                     Methods.RemoveExcludedProperties(classDeclarationSyntax, className);
                 var classBuilder = new StringBuilder();
-
                 classBuilder.AppendLine("using System.Dynamic;");
-                classBuilder.AppendLine("using System.Collections;");
+                classBuilder.AppendLine("using System.Linq;");
                 classBuilder.AppendLine("using SourceDto;");
                 Methods.AppendNamespacesToFile(classDeclarationSyntax, classBuilder);
 

@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using PropertyDeclarationSyntax = Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax;
 
 namespace DynatestSourceGenerator;
 
 internal static class Methods
 {
     #region Maps
+
     public static List<string> GetMapFromProperties(SyntaxNode? classDeclarationSyntax, string className)
     {
         var props = new List<string>();
@@ -37,6 +39,24 @@ internal static class Methods
             {
                 var replace = GetUsingArgument(useExisting, className);
                 var name = replace ?? $"{propertyDeclaration.Type}DTO";
+                if (name.Contains("<") && name.Contains("DTO"))
+                {
+                    // Find the index of the first '<' character in the string
+                    int startIndex = name.IndexOf("<", StringComparison.Ordinal);
+
+                    // Find the index of the closing '>' character in the string
+                    int endIndex = name.IndexOf(">", StringComparison.Ordinal);
+
+                    // Extract the type parameter from the original string
+                    string type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
+
+                    // Replace the type parameter with the modified type
+                    name = $"{type}DTO";
+                    
+                    props.Add($"{propertyDeclaration.Identifier} = instance.{propertyDeclaration.Identifier}?.Select(t=>new {name}().MapFrom(t)).ToList();");
+                    continue;
+                }
+                
                 props.Add(
                     $"{propertyDeclaration.Identifier} = new {name}().MapFrom(instance.{propertyDeclaration.Identifier});");
             }
@@ -44,6 +64,7 @@ internal static class Methods
 
         return props;
     }
+
     public static List<string> GetMapToProperties(SyntaxNode? classDeclarationSyntax, string className)
     {
         var props = new List<string>();
@@ -66,6 +87,14 @@ internal static class Methods
             }
             else
             {
+                if (propertyDeclaration.ToString().Contains("<"))
+                {
+                    props.Add(
+                        $"{propertyDeclaration.Identifier} = {propertyDeclaration.Identifier}?.Select(t=>t.MapTo()).ToList(),");
+                    continue;
+                }
+
+
                 props.Add(
                     $"{propertyDeclaration.Identifier} = {propertyDeclaration.Identifier}.MapTo(),");
             }
@@ -73,6 +102,7 @@ internal static class Methods
 
         return props;
     }
+
     #endregion
 
     public static void AppendNamespacesToFile(ClassDeclarationSyntax classDeclarationSyntax, StringBuilder classBuilder)
@@ -131,13 +161,13 @@ internal static class Methods
                         $"{propertyDeclaration.Modifiers} {propertyDeclaration.Type} {propertyDeclaration.Identifier.Text} {propertyDeclaration.ExpressionBody};");
                 }
                 else if (propertyDeclaration.AccessorList == null ||
-                        propertyDeclaration.AccessorList.Accessors.All(a =>
-                            a.Kind() != SyntaxKind.SetAccessorDeclaration))
+                         propertyDeclaration.AccessorList.Accessors.All(a =>
+                             a.Kind() != SyntaxKind.SetAccessorDeclaration))
                 {
                 }
                 else if (propertyDeclaration.ToString().StartsWith("["))
                 {
-                    var prop1 = propertyDeclaration.ToString().Split(new string[] { "\r\n" }, StringSplitOptions.None);
+                    var prop1 = propertyDeclaration.ToString().Split(new[] { "\r\n" }, StringSplitOptions.None);
                     props.Add($"{prop1.First()}\r\n\t{prop1.Last().TrimStart()}");
                 }
                 else
@@ -148,10 +178,24 @@ internal static class Methods
             else
             {
                 var replace = GetUsingArgument(useExisting, className);
-                var dto = propertyDeclaration.ToString().GetLastPart("]")
-                    .ReplaceFirst(propertyDeclaration.Type.ToString(), replace ?? $"{propertyDeclaration.Type}DTO").TrimStart();
+                var dto = propertyDeclaration.ToString().GetLastPart("]").ReplaceFirst(propertyDeclaration.Type.ToString(),
+                    replace ?? $"{propertyDeclaration.Type}DTO");
+                
+                if (dto.Contains("<") && dto.Contains("DTO"))
+                {
+                    // Find the index of the first '<' character in the string
+                    int startIndex = dto.IndexOf("<", StringComparison.Ordinal);
 
-                props.Add($"{dto}");
+                    // Find the index of the closing '>' character in the string
+                    int endIndex = dto.IndexOf(">", StringComparison.Ordinal);
+
+                    // Extract the type parameter from the original string
+                    string type = dto.Substring(startIndex + 1, endIndex - startIndex - 1);
+
+                    // Replace the type parameter with the modified type
+                    dto = dto.Replace($"<{type}>DTO", $"<{type}DTO>");
+                }
+                props.Add($"{dto.TrimStart()}");
             }
         }
 
@@ -187,7 +231,8 @@ internal static class Methods
     }
 
 
-    public static ClassDeclarationSyntax? RemoveExcludedProperties(ClassDeclarationSyntax classDeclaration, string className)
+    public static ClassDeclarationSyntax? RemoveExcludedProperties(ClassDeclarationSyntax classDeclaration,
+        string className)
     {
         var ignoredProperties = classDeclaration.ChildNodes()
             .OfType<PropertyDeclarationSyntax>()
@@ -200,5 +245,4 @@ internal static class Methods
 
         return getClassWithoutIgnoredProperties;
     }
-
 }
