@@ -21,11 +21,6 @@
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
-		<PackageReleaseNotes>Version 0.4.1
-
-* Added support for collections in the generator to resolve errors when adding a list into the DTO.
-* The UseExistingDTO function now supports collections and can modify the object within the current type.</PackageReleaseNotes>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
     <ItemGroup>

@@ -1,14 +1,23 @@
-﻿using System;
-using DynatestSourceGenerator.Abstractions.Attributes;
+﻿using DynatestSourceGenerator.Abstractions.Attributes;
+using System;
+using System.Collections.Generic;
 
 namespace Demo
 {
-    [GenerateDto]
+    [GenerateDto("ClassB")]
     public class Class
     {
         public DateTime Date { get; set; }
-        public int TemperatureC { get; set; }
+        [UseExistingDto]
+        public List<WeatherForecast> WeatherForecasts { get; set; }
 
+    }
+
+    [GenerateDto]
+    public class Tester
+    {
+        [UseExistingDto]
+        public Class Class { get; set; }
     }
 
 }

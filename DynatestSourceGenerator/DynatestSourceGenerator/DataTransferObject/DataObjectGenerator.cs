@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using DynatestSourceGenerator.DataTransferObject.Utilities;
 
 namespace DynatestSourceGenerator.DataTransferObject;
 
@@ -29,8 +30,19 @@ public class DataObjectGenerator : IIncrementalGenerator
 
     private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
     {
-        var attributeSyntax = (AttributeSyntax)context.Node;
-        return attributeSyntax.Parent?.Parent is not ClassDeclarationSyntax classDeclarationSyntax ? null : classDeclarationSyntax;
+        if (context.Node is not AttributeSyntax attributeSyntax)
+        {
+            return null;
+        }
+
+        var name = ExtractAttributeName(attributeSyntax.Name);
+
+        if (name is not "GenerateDto")
+        {
+            return null;
+        }
+
+        return attributeSyntax.Parent?.Parent as ClassDeclarationSyntax;
     }
 
     private static bool IsSyntaxTargetForGeneration(SyntaxNode syntaxNode)
@@ -58,7 +70,9 @@ public class DataObjectGenerator : IIncrementalGenerator
     {
         foreach (var classDeclarationSyntax in enumerations)
         {
-            var attributes = from attributeList in classDeclarationSyntax!.AttributeLists
+            if (classDeclarationSyntax is null) continue;
+
+            var attributes = from attributeList in classDeclarationSyntax.AttributeLists
                              from attribute in attributeList.Attributes
                              select attribute;
 
@@ -68,42 +82,37 @@ public class DataObjectGenerator : IIncrementalGenerator
                 continue;
             }
 
-
-            var arguments = Methods.GetAttributeArguments(hasGenerateAttribute);
-            if (!arguments.Any())
-            {
-                arguments.Add($"{classDeclarationSyntax.Identifier.ValueText}DTO");
-            }
+            var arguments = Get.AttributeArguments(hasGenerateAttribute).DefaultIfEmpty($"{classDeclarationSyntax.Identifier.ValueText}DTO");
 
             foreach (var className in arguments)
             {
                 var classWithoutExcludedProperties =
-                    Methods.RemoveExcludedProperties(classDeclarationSyntax, className);
+                    Remove.ExcludedProperties(classDeclarationSyntax, className);
                 var classBuilder = new StringBuilder();
                 classBuilder.AppendLine("using System.Dynamic;");
                 classBuilder.AppendLine("using System.Linq;");
                 classBuilder.AppendLine("using SourceDto;");
-                Methods.AppendNamespacesToFile(classDeclarationSyntax, classBuilder);
 
-                foreach (var usingDirective in Methods.UsingDirectives(classDeclarationSyntax))
+                Append.NamespacesToFile(classDeclarationSyntax, classBuilder);
+
+                foreach (var usingDirective in Directives.Using(classDeclarationSyntax))
                 {
                     classBuilder.AppendLine(usingDirective!.ToString());
                 }
-
-
                 classBuilder.AppendLine($@"
 namespace SourceDto;
 public record class {className}
 {{");
-                if (Methods.GetProperties(classWithoutExcludedProperties, className).Any())
+                var properties = Get.Properties(classWithoutExcludedProperties, className).ToList();
+                if (properties.Any())
                 {
-                    foreach (var property in Methods.GetProperties(classWithoutExcludedProperties, className))
+                    foreach (var property in properties)
                     {
                         classBuilder.AppendLine($"\t{property}");
                     }
+                    var param = classWithoutExcludedProperties!.Identifier.ValueText;
 
                     // MapFrom
-                    var param = classWithoutExcludedProperties!.Identifier.ValueText;
                     classBuilder.AppendLine($@"
     /// <summary>
     /// Maps a <see cref=""{param}""/> instance to a <see cref=""{className}""/> instance.
@@ -112,7 +121,7 @@ public record class {className}
     /// <returns>The mapped <see cref=""{className}""/> instance.</returns>
     public {className} MapFrom({param} instance)
     {{");
-                    foreach (var property in Methods.GetMapFromProperties(classWithoutExcludedProperties, className))
+                    foreach (var property in Map.FromProperties(classWithoutExcludedProperties, className))
                     {
                         classBuilder.AppendLine($"\t\t{property}");
                     }
@@ -132,7 +141,7 @@ public record class {className}
                     classBuilder.AppendLine($"\t\treturn new {param}");
                     classBuilder.AppendLine("\t\t{");
 
-                    foreach (var property in Methods.GetMapToProperties(classWithoutExcludedProperties, className))
+                    foreach (var property in Map.ToProperties(classWithoutExcludedProperties, className))
                     {
                         classBuilder.AppendLine($"\t\t\t{property}");
                     }
