@@ -35,7 +35,7 @@ public class DataObjectGenerator : IIncrementalGenerator
             return null;
         }
 
-        var name = ExtractAttributeName(attributeSyntax.Name);
+        var name = Get.AttributeName(attributeSyntax.Name);
 
         if (name is not "GenerateDto")
         {
@@ -52,18 +52,12 @@ public class DataObjectGenerator : IIncrementalGenerator
             return false;
         }
 
-        var name = ExtractAttributeName(attributeSyntax.Name);
+        var name = Get.AttributeName(attributeSyntax.Name);
 
         return name is "GenerateDto";
     }
 
-    private static string ExtractAttributeName(NameSyntax? name) =>
-        (name switch
-        {
-            SimpleNameSyntax simpleNameSyntax => simpleNameSyntax.Identifier.Text,
-            QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
-            _ => null
-        })!;
+    
 
     private static void GenerateClass(SourceProductionContext context,
         ImmutableArray<ClassDeclarationSyntax?> enumerations)

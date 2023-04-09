@@ -31,9 +31,10 @@ internal static class Map
             }
             else
             {
-                var replace = Get.UsingArgument(useExisting, className);
-                var name = replace ?? $"{propertyDeclaration.Type}DTO";
-                if (name.Contains("<") && name.Contains("DTO"))
+                var replace = Get.UsingArgumentReplace(useExisting, className);
+                var usingSubstitute = Get.UsingArgumentSubstitute(useExisting);
+                var name = propertyDeclaration.Type.ToString();
+                if (name.Contains("<"))
                 {
                     // Find the index of the first '<' character in the string
                     var startIndex = name.IndexOf("<", StringComparison.Ordinal);
@@ -44,11 +45,51 @@ internal static class Map
                     // Extract the type parameter from the original string
                     var type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
 
-                    // Replace the type parameter with the modified type
-                    name = $"{type}DTO";
-                    
+                    if (usingSubstitute is not null)
+                    {
+                        name = $"{usingSubstitute}";
+                    }
+                    else if (replace is not null)
+                    {
+                        name = $"{replace}";
+                    }
+                    else
+                    {
+                        // Replace the type parameter with the modified type
+                        name = $"{type}DTO";
+                    }
+
                     props.Add($"{propertyDeclaration.Identifier} = instance.{propertyDeclaration.Identifier}?.Select(t=>new {name}().MapFrom(t)).ToList();");
                     continue;
+                }
+                else if (name.Contains("[]"))
+                {
+                    // Find the index of the first '<' character in the string
+                    var startIndex = name.IndexOf("[", StringComparison.Ordinal);
+
+                    // Extract the type parameter from the original string
+                    var type = name.Remove(startIndex);
+
+                    if (usingSubstitute is not null)
+                    {
+                        name = $"{usingSubstitute}";
+                    }
+                    else if (replace is not null)
+                    {
+                        name = $"{replace}";
+                    }
+                    else
+                    {
+                        // Replace the type parameter with the modified type
+                        name = $"{type}DTO";
+                    }
+
+                    props.Add($"{propertyDeclaration.Identifier} = instance.{propertyDeclaration.Identifier}?.Select(t=>new {name}().MapFrom(t)).ToArray();");
+                    continue;
+                }
+                else
+                {
+                    name = usingSubstitute ?? replace ?? $"{propertyDeclaration.Type}DTO";
                 }
 
                 props.Add(
@@ -89,6 +130,13 @@ internal static class Map
                 {
                     props.Add(
                         $"{propertyDeclaration.Identifier} = {propertyDeclaration.Identifier}?.Select(t=>t.MapTo()).ToList(),");
+                    continue;
+                }
+
+                if (propertyDeclaration.ToString().Contains("[]"))
+                {
+                    props.Add(
+                        $"{propertyDeclaration.Identifier} = {propertyDeclaration.Identifier}?.Select(t=>t.MapTo()).ToArray(),");
                     continue;
                 }
                 var mapToMethod = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,

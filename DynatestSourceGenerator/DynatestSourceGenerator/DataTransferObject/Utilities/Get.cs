@@ -6,12 +6,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace DynatestSourceGenerator.DataTransferObject.Utilities;
 
 internal static class Get
 {
-    internal static IEnumerable<string> Properties(SyntaxNode? classDeclarationSyntax, string className)
+    internal static IEnumerable<string> Properties(ClassDeclarationSyntax classDeclarationSyntax, string className)
     {
         var props = new List<string>();
         
@@ -36,8 +38,8 @@ internal static class Get
                 }
                 else if (propertyDeclaration.ToString().StartsWith("["))
                 {
-                    var prop = SyntaxFactory.PropertyDeclaration(type: propertyDeclaration.Type, identifier: propertyDeclaration.Identifier).WithModifiers(propertyDeclaration.Modifiers).WithAccessorList(propertyDeclaration.AccessorList).WithAttributeLists(propertyDeclaration.AttributeLists);
-                    props.Add($"{prop}");
+                    var prop1 = propertyDeclaration.ToString().Split(new[] { "\r\n" }, StringSplitOptions.None);
+                    props.Add($"{prop1.First()}\r\n\t{prop1.Last().TrimStart()}");
                 }
                 else
                 {
@@ -46,13 +48,10 @@ internal static class Get
             }
             else
             {
-                var replace = UsingArgument(useExisting, className);
-                var dto = propertyDeclaration.ToString().GetLastPart("]").ReplaceFirst(
-                    propertyDeclaration.Type.ToString(),
-                    replace ?? $"{propertyDeclaration.Type}DTO");
-                
-                
-                if (dto.Contains("<") && dto.Contains("DTO"))
+                var usingSubstitute = UsingArgumentSubstitute(useExisting);
+                var replace = UsingArgumentReplace(useExisting, className);
+                var dto = propertyDeclaration.ToString();
+                if (dto.Contains("<"))
                 {
                     // Find the index of the first '<' character in the string
                     var startIndex = dto.IndexOf("<", StringComparison.Ordinal);
@@ -62,26 +61,47 @@ internal static class Get
 
                     // Extract the type parameter from the original string
                     var type = dto.Substring(startIndex + 1, endIndex - startIndex - 1);
-
-                    // Replace the type parameter with the modified type
-                    dto = dto.ReplaceFirst($"<{type}>DTO", $"<{type}DTO>");
+                    if (usingSubstitute is not null)
+                    {
+                        dto = dto.GetLastPart("]").ReplaceFirst($"<{type}>", $"<{usingSubstitute}>");
+                    }
+                    else if (replace is not null)
+                    {
+                        dto = dto.GetLastPart("]").ReplaceFirst($"<{type}>", $"<{replace}>");
+                    }
+                    else
+                    {
+                        dto = dto.GetLastPart("]").ReplaceFirst($"<{type}>", $"<{type}DTO>");
+                    }
                 }
-                else if(dto.Contains("<"))
+                else if (dto.Contains("[]"))
                 {
-                    // Find the index of the first '<' character in the string
-                    var startIndex = dto.IndexOf("<", StringComparison.Ordinal);
-
-                    // Find the index of the closing '>' character in the string
-                    var endIndex = dto.IndexOf(">", StringComparison.Ordinal);
-
                     // Extract the type parameter from the original string
-                    var type = dto.Substring(startIndex + 1, endIndex - startIndex - 1);
-
-                    // Replace the type parameter with the modified type
+                    if (usingSubstitute is not null)
+                    {
+                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
+                        string replacement = $"$1{usingSubstitute}[] $3 {{ get; set;}}";
+                        dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);                      
+                    }
+                    else if (replace is not null)
+                    {
+                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
+                        string replacement = $"$1{replace}[] $3 {{ get; set;}}";
+                        dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);                   
+                    }
+                    else
+                    {
+                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+[A-Za-z]+\[\]\s+[A-Za-z]+\s*{\s*get;\s*set;\s*})";
+                        string replacement = "$1DTO";
+                        dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline); 
+                    } 
+                }
+                else
+                {
                     dto = dto.GetLastPart("]").ReplaceFirst(
-                        $"<{type}>", $"<{replace}>");
+                        propertyDeclaration.Type.ToString(),
+                        usingSubstitute ?? replace ?? $"{propertyDeclaration.Type}DTO");
                 }
-
                 var prop = SyntaxFactory.ParseMemberDeclaration($"{dto.TrimStart()}");
                 props.Add($"{prop}");
             }
@@ -90,11 +110,18 @@ internal static class Get
         return props;
     }
 
-    internal static string? UsingArgument(AttributeSyntax usingSyntax, string className)
+    internal static string? UsingArgumentReplace(AttributeSyntax usingSyntax, string className)
     {
         var argument = AttributeArguments(usingSyntax)
             .Where(u => u.StartsWith(className) && u.Contains(" > "));
         return argument.FirstOrDefault()?.Split('>').LastOrDefault()?.Trim();
+    }
+    
+    internal static string? UsingArgumentSubstitute(AttributeSyntax usingSyntax)
+    {
+        var argument = AttributeArguments(usingSyntax)
+            .Where(u=> !u.Contains(" > "));
+        return argument.FirstOrDefault()?.Trim();
     }
     
     internal static List<string> AttributeArguments(AttributeSyntax attribute)
@@ -117,4 +144,12 @@ internal static class Get
             .SelectMany(a => a.Attributes)
             .FirstOrDefault(a => a.Name.ToString() == nameof(UseExistingDto));
     }
+
+    internal static string AttributeName(NameSyntax? name) =>
+        (name switch
+        {
+            SimpleNameSyntax simpleNameSyntax => simpleNameSyntax.Identifier.Text,
+            QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+            _ => null
+        })!;
 }
