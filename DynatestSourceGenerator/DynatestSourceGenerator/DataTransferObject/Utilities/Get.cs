@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace DynatestSourceGenerator.DataTransferObject.Utilities;
 
@@ -50,6 +49,7 @@ internal static class Get
             {
                 var usingSubstitute = UsingArgumentSubstitute(useExisting);
                 var replace = UsingArgumentReplace(useExisting, className);
+                
                 var dto = propertyDeclaration.ToString();
                 if (dto.Contains("<"))
                 {
@@ -91,9 +91,9 @@ internal static class Get
                     }
                     else
                     {
-                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+[A-Za-z]+\[\]\s+[A-Za-z]+\s*{\s*get;\s*set;\s*})";
-                        string replacement = "$1DTO";
-                        dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline); 
+                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+([A-Za-z]+)\[\]\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*})";
+                        string replacement = "public $2DTO[] $3 { get; set; }";
+                        dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);
                     } 
                 }
                 else

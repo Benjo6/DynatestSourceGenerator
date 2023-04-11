@@ -10,14 +10,12 @@ namespace Demo
         public DateTime Date { get; set; }
         [UseExistingDto]
         public List<WeatherForecast> WeatherForecasts { get; set; }
-
-    }
-
-    [GenerateDto]
-    public class Tester
-    {
+        
         [UseExistingDto]
-        public Class Class { get; set; }
+        public WeatherForecast[] Forecast { get; set; }
+        
+        
     }
+    
 
 }

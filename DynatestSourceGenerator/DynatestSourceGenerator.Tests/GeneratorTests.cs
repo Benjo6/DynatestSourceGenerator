@@ -47,8 +47,8 @@ public record class MyClassDTO
     /// <returns>The mapped <see cref=""MyClassDTO""/> instance.</returns>
     public MyClassDTO MapFrom(MyClass instance)
     {
-		Id = instance.Id;
-		Name = instance.Name;
+		Id=instance.Id;
+		Name=instance.Name;
 		return this;
 	}
 
@@ -60,8 +60,8 @@ public record class MyClassDTO
     {
 		return new MyClass
 		{
-			Id = Id,
-			Name = Name,
+			Id=Id,
+			Name=Name,
 		};
 	}
 }
@@ -167,7 +167,7 @@ public record class MyClassDTO
     /// <returns>The mapped <see cref=""MyClassDTO""/> instance.</returns>
     public MyClassDTO MapFrom(MyClass instance)
     {
-		Id = instance.Id;
+		Id=instance.Id;
 		return this;
 	}
 
@@ -179,7 +179,7 @@ public record class MyClassDTO
     {
 		return new MyClass
 		{
-			Id = Id,
+			Id=Id,
 		};
 	}
 }
@@ -242,8 +242,8 @@ public record class WeatherForecastDTO
     /// <returns>The mapped <see cref=""WeatherForecastDTO""/> instance.</returns>
     public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
-		Date = instance.Date;
-		TemperatureC = instance.TemperatureC;
+		Date=instance.Date;
+		TemperatureC=instance.TemperatureC;
 		MyClass = new MyClassDTO().MapFrom(instance.MyClass);
 		return this;
 	}
@@ -256,9 +256,9 @@ public record class WeatherForecastDTO
     {
 		return new WeatherForecast
 		{
-			Date = Date,
-			TemperatureC = TemperatureC,
-			MyClass = MyClass.MapTo(),
+			Date=Date,
+			TemperatureC=TemperatureC,
+			MyClass=MyClass.MapTo(),
 		};
 	}
 }
@@ -333,8 +333,8 @@ public record class TestingWeather
     /// <returns>The mapped <see cref=""TestingWeather""/> instance.</returns>
     public TestingWeather MapFrom(WeatherForecast instance)
     {
-		Date = instance.Date;
-		TemperatureC = instance.TemperatureC;
+		Date=instance.Date;
+		TemperatureC=instance.TemperatureC;
 		Station = new Station2().MapFrom(instance.Station);
 		return this;
 	}
@@ -347,9 +347,9 @@ public record class TestingWeather
     {
 		return new WeatherForecast
 		{
-			Date = Date,
-			TemperatureC = TemperatureC,
-			Station = Station.MapTo(),
+			Date=Date,
+			TemperatureC=TemperatureC,
+			Station=Station.MapTo(),
 		};
 	}
 }
@@ -377,9 +377,9 @@ public record class WeatherForecastDTO
     /// <returns>The mapped <see cref="WeatherForecastDTO"/> instance.</returns>
     public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
-		Date = instance.Date;
-		TemperatureC = instance.TemperatureC;
-		Summary = instance.Summary;
+		Date=instance.Date;
+		TemperatureC=instance.TemperatureC;
+		Summary=instance.Summary;
 		Station = new StationDTO().MapFrom(instance.Station);
 		return this;
 	}
@@ -392,10 +392,10 @@ public record class WeatherForecastDTO
     {
 		return new WeatherForecast
 		{
-			Date = Date,
-			TemperatureC = TemperatureC,
-			Summary = Summary,
-			Station = Station.MapTo(),
+			Date=Date,
+			TemperatureC=TemperatureC,
+			Summary=Summary,
+			Station=Station.MapTo(),
 		};
 	}
 }
@@ -521,6 +521,88 @@ public record class WeatherForecastDTO
     }
 
     [Test]
+    public async Task ArraWithUseExistingDTOShouldReturnExpectedCode()
+    {
+        var source =
+            """
+            using System.Collections.Generic;
+
+            namespace Demo;
+            [GenerateDto]
+            public class Class
+            {
+                [UseExistingDto]
+                public WeatherForecast[] WeatherForecasts { get; set; }
+
+            }
+            """;
+        var expected =
+            """
+            using System.Dynamic;
+            using System.Linq;
+            using SourceDto;
+            using Demo;
+            using System.Collections.Generic;
+
+            namespace SourceDto;
+            public record class ClassDTO
+            {
+            	public WeatherForecastDTO[] WeatherForecasts { get; set; }
+
+                /// <summary>
+                /// Maps a <see cref="Class"/> instance to a <see cref="ClassDTO"/> instance.
+                /// </summary>
+                /// <param name="instance">The <see cref="Class"/> instance to map.</param>
+                /// <returns>The mapped <see cref="ClassDTO"/> instance.</returns>
+                public ClassDTO MapFrom(Class instance)
+                {
+            		WeatherForecasts = instance.WeatherForecasts?.Select(t=>new WeatherForecastDTO().MapFrom(t)).ToArray();
+            		return this;
+            	}
+
+                /// <summary>
+                /// Maps a <see cref="ClassDTO"/> instance to a <see cref="Class"/> instance.
+                /// </summary>
+                /// <returns>The mapped <see cref="Class"/> instance.</returns>
+                public Class MapTo()
+                {
+            		return new Class
+            		{
+            			WeatherForecasts = WeatherForecasts?.Select(t=>t.MapTo()).ToArray(),
+            		};
+            	}
+            }
+            
+            """;
+        var test = new TestMachine
+        {
+            TestCode = source,
+            ReferenceAssemblies = ReferenceAssemblies.Default,
+            TestState =
+            {
+                ExpectedDiagnostics =
+                {
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(4, 2, 4, 13).WithArguments("GenerateDto"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(4, 2, 4, 13).WithArguments("GenerateDtoAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDto"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDtoAttribute"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan(8, 12, 8, 27).WithArguments("WeatherForecast"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.1, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 10, 9, 10, 27).WithArguments("WeatherForecastDTO"),
+                    DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.1, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 19, 63, 19, 81).WithArguments("WeatherForecastDTO"),
+
+                },
+                GeneratedSources =
+                {
+                    (typeof(Adapter<DataObjectGenerator>),"ClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8)),
+                }
+            }
+        };
+
+        // Act & Assert
+        await test.RunAsync();
+    }
+
+    [Test]
     public async Task AdvancedTestOfAScenario()
     {
         var source =
@@ -573,9 +655,9 @@ public record class TestingWeather
     /// <returns>The mapped <see cref="TestingWeather"/> instance.</returns>
     public TestingWeather MapFrom(WeatherForecast instance)
     {
-		Date = instance.Date;
-		TemperatureC = instance.TemperatureC;
-		TemperatureK = instance.TemperatureK;
+		Date=instance.Date;
+		TemperatureC=instance.TemperatureC;
+		TemperatureK=instance.TemperatureK;
 		Station = new StationWithNoNameDTO().MapFrom(instance.Station);
 		return this;
 	}
@@ -588,10 +670,10 @@ public record class TestingWeather
     {
 		return new WeatherForecast
 		{
-			Date = Date,
-			TemperatureC = TemperatureC,
-			TemperatureK = TemperatureK,
-			Station = Station.MapTo(),
+			Date=Date,
+			TemperatureC=TemperatureC,
+			TemperatureK=TemperatureK,
+			Station=Station.MapTo(),
 		};
 	}
 }
@@ -624,10 +706,10 @@ public record class WeatherForecastDTO
     /// <returns>The mapped <see cref="WeatherForecastDTO"/> instance.</returns>
     public WeatherForecastDTO MapFrom(WeatherForecast instance)
     {
-		Date = instance.Date;
-		TemperatureC = instance.TemperatureC;
-		TemperatureK = instance.TemperatureK;
-		Summary = instance.Summary;
+		Date=instance.Date;
+		TemperatureC=instance.TemperatureC;
+		TemperatureK=instance.TemperatureK;
+		Summary=instance.Summary;
 		Station = new StationDTO().MapFrom(instance.Station);
 		return this;
 	}
@@ -640,11 +722,11 @@ public record class WeatherForecastDTO
     {
 		return new WeatherForecast
 		{
-			Date = Date,
-			TemperatureC = TemperatureC,
-			TemperatureK = TemperatureK,
-			Summary = Summary,
-			Station = Station.MapTo(),
+			Date=Date,
+			TemperatureC=TemperatureC,
+			TemperatureK=TemperatureK,
+			Summary=Summary,
+			Station=Station.MapTo(),
 		};
 	}
 }
