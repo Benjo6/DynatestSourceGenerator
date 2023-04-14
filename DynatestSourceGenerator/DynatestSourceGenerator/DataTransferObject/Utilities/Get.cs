@@ -79,20 +79,20 @@ internal static class Get
                     // Extract the type parameter from the original string
                     if (usingSubstitute is not null)
                     {
-                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
-                        string replacement = $"$1{usingSubstitute}[] $3 {{ get; set;}}";
+                        var pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
+                        var replacement = $"$1{usingSubstitute}[] $3 {{ get; set;}}";
                         dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);                      
                     }
                     else if (replace is not null)
                     {
-                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
-                        string replacement = $"$1{replace}[] $3 {{ get; set;}}";
+                        var pattern = @"^\s*\[[^\]]*\]\s*(public\s+)([A-Za-z]+\[\])\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*}";
+                        var replacement = $"$1{replace}[] $3 {{ get; set;}}";
                         dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);                   
                     }
                     else
                     {
-                        string pattern = @"^\s*\[[^\]]*\]\s*(public\s+([A-Za-z]+)\[\]\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*})";
-                        string replacement = "public $2DTO[] $3 { get; set; }";
+                        var pattern = @"^\s*\[[^\]]*\]\s*(public\s+([A-Za-z]+)\[\]\s+([A-Za-z]+)\s*{\s*get;\s*set;\s*})";
+                        var replacement = "public $2DTO[] $3 { get; set; }";
                         dto = Regex.Replace(dto, pattern, replacement, RegexOptions.Multiline);
                     } 
                 }

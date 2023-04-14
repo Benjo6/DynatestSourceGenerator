@@ -5,7 +5,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.4.1</Version>
+        <Version>0.0.4.2</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -21,10 +21,20 @@
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
-		<PackageReleaseNotes>Version 0.4.1
+		<PackageReleaseNotes>
+			Version 0.4.2
 
-* Added support for collections in the generator to resolve errors when adding a list into the DTO.
-* The UseExistingDTO function now supports collections and can modify the object within the current type.</PackageReleaseNotes>
+			Features
+			UseExistingDTO function has been improved to be more user-friendly. Now, it is possible to define the DTO name that you want to add in the parentheses.
+
+			The performance of the application has been enhanced due to the replacement of generic string search with Regex string searching.
+
+			Bug Fixes
+			Source Generator has been updated to fix the issue with unsupported usage of arrays in your properties.
+			Known Issues
+			The inputs for the attributes are all strings, which can cause issues. We recommend verifying that the inputs for the attributes are valid before using them in your code.
+			Thank you for using our software! If you encounter any issues or have any feedback, please do not hesitate to reach out to our support team.
+		</PackageReleaseNotes>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 

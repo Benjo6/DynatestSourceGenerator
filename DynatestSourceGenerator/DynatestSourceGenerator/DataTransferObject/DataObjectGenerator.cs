@@ -115,12 +115,14 @@ public record class {className}
     /// <returns>The mapped <see cref=""{className}""/> instance.</returns>
     public {className} MapFrom({param} instance)
     {{");
+                    classBuilder.AppendLine($"\t\tif (instance is null)\r\n\t\t\treturn default;");
+                    classBuilder.AppendLine($"\t\tvar target = new {className}();");
                     foreach (var property in Map.FromProperties(classWithoutExcludedProperties, className))
                     {
                         classBuilder.AppendLine($"\t\t{property}");
                     }
 
-                    classBuilder.AppendLine("\t\treturn this;");
+                    classBuilder.AppendLine("\t\treturn target;");
 
                     classBuilder.AppendLine("\t}");
 
@@ -132,21 +134,29 @@ public record class {className}
     /// <returns>The mapped <see cref=""{param}""/> instance.</returns>
     public {param} MapTo()
     {{");
-                    classBuilder.AppendLine($"\t\treturn new {param}");
-                    classBuilder.AppendLine("\t\t{");
+                    classBuilder.AppendLine($"\t\tvar target = new {param}()");
 
-                    foreach (var property in Map.ToProperties(classWithoutExcludedProperties, className))
+                    foreach (var property in Map.ToProperties(classWithoutExcludedProperties))
                     {
-                        classBuilder.AppendLine($"\t\t\t{property}");
+                        classBuilder.AppendLine($"\t\t{property}");
                     }
+                    classBuilder.AppendLine("\t\treturn target;");
+                    classBuilder.AppendLine("\t};");
 
-                    classBuilder.AppendLine("\t\t};");
 
-                    classBuilder.AppendLine("\t}");
+
+                    // MapFromArray
+                    //classBuilder.AppendLine(Map.FromArrayMethod(classBuilder, className, param));
+
+                    // MapToArray
+                    Map.ToArrayMethod(classBuilder, param, className);
+                    
+
+                    classBuilder.AppendLine("\n}");
+
+
                 }
-
-                classBuilder.AppendLine("}");
-
+                
 
                 context.AddSource($"{className}{GeneratedFileSuffix}",
                     classBuilder.ToString());

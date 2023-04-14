@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using SourceDto;
 
 namespace Demo
 {
@@ -7,7 +10,11 @@ namespace Demo
     {
         public static void Main(string[] args)
         {
+            var classB = new ClassB() { Date = DateTime.Now,WeatherForecasts = new List<WeatherForecastDTO>() ,Forecast = Array.Empty<WeatherForecastDTO>() }; 
+            var idea = classB.MapTo();
+            Console.WriteLine(idea.ToString());
             CreateHostBuilder(args).Build().Run();
+
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
