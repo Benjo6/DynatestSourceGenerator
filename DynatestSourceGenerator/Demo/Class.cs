@@ -1,8 +1,6 @@
 ﻿using DynatestSourceGenerator.Abstractions.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using SourceDto;
 
 namespace Demo
 {
@@ -10,10 +8,10 @@ namespace Demo
     public class Class
     {
         public DateTime Date { get; set; }
-        [UseExistingDto] 
-        public List<WeatherForecast> WeatherForecasts { get; set; }
+        [UseExistingDto]
+        public IEnumerable<WeatherForecast> WeatherForecasts { get; set; }
 
-        [UseExistingDto] 
+        [UseExistingDto("TestingWeather")]
         public WeatherForecast[] Forecast { get; set; }
 
 

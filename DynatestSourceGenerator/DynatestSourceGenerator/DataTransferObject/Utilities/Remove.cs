@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynatestSourceGenerator.Abstractions.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,5 +21,15 @@ internal static class Remove
             classDeclaration.RemoveNodes(ignoredProperties, SyntaxRemoveOptions.KeepEndOfLine);
 
         return getClassWithoutIgnoredProperties;
+    }
+    
+    internal static string ArrayBrackets(string name)
+    {
+        // Find the index of the first '<' character in the string
+        var startIndex = name.IndexOf("[", StringComparison.Ordinal);
+
+        // Extract the type parameter from the original string
+        var type = name.Remove(startIndex);
+        return type;
     }
 }

@@ -134,19 +134,20 @@ public record class {className}
     /// <returns>The mapped <see cref=""{param}""/> instance.</returns>
     public {param} MapTo()
     {{");
-                    classBuilder.AppendLine($"\t\tvar target = new {param}()");
+                    classBuilder.AppendLine($"\t\tvar target = new {param}();");
 
-                    foreach (var property in Map.ToProperties(classWithoutExcludedProperties))
+                    foreach (var property in Map.ToProperties(classWithoutExcludedProperties, className))
                     {
                         classBuilder.AppendLine($"\t\t{property}");
                     }
                     classBuilder.AppendLine("\t\treturn target;");
-                    classBuilder.AppendLine("\t};");
+                    classBuilder.AppendLine("\t}");
 
 
 
                     // MapFromArray
-                    //classBuilder.AppendLine(Map.FromArrayMethod(classBuilder, className, param));
+                    Map.FromArrayMethod(classBuilder, className, param);
+                    classBuilder.AppendLine("\n");
 
                     // MapToArray
                     Map.ToArrayMethod(classBuilder, param, className);
