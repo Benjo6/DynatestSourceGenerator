@@ -1,6 +1,6 @@
 ﻿using DynatestSourceGenerator.Abstractions.Attributes;
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Demo
 {
@@ -9,7 +9,7 @@ namespace Demo
     {
         public DateTime Date { get; set; }
         [UseExistingDto]
-        public IEnumerable<WeatherForecast> WeatherForecasts { get; set; }
+        public ImmutableArray<WeatherForecast> WeatherForecasts { get; set; }
 
         [UseExistingDto("TestingWeather")]
         public WeatherForecast[] Forecast { get; set; }

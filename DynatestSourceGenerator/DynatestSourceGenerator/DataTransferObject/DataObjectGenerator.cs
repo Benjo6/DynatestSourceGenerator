@@ -1,12 +1,12 @@
 ﻿#nullable enable
 using DynatestSourceGenerator.Abstractions.Attributes;
 using DynatestSourceGenerator.DataTransferObject.Extensions;
+using DynatestSourceGenerator.DataTransferObject.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using DynatestSourceGenerator.DataTransferObject.Utilities;
 
 namespace DynatestSourceGenerator.DataTransferObject;
 
@@ -57,7 +57,7 @@ public class DataObjectGenerator : IIncrementalGenerator
         return name is "GenerateDto";
     }
 
-    
+
 
     private static void GenerateClass(SourceProductionContext context,
         ImmutableArray<ClassDeclarationSyntax?> enumerations)
@@ -83,6 +83,7 @@ public class DataObjectGenerator : IIncrementalGenerator
                 var classWithoutExcludedProperties =
                     Remove.ExcludedProperties(classDeclarationSyntax, className);
                 var classBuilder = new StringBuilder();
+                classBuilder.AppendLine("using System.Collections.Generic;");
                 classBuilder.AppendLine("using System.Dynamic;");
                 classBuilder.AppendLine("using System.Linq;");
                 classBuilder.AppendLine("using SourceDto;");
@@ -91,7 +92,14 @@ public class DataObjectGenerator : IIncrementalGenerator
 
                 foreach (var usingDirective in Directives.Using(classDeclarationSyntax))
                 {
-                    classBuilder.AppendLine(usingDirective!.ToString());
+                    string us = usingDirective.ToString();
+
+                    // Check if the namespace has already been added to the class builder
+                    if (!classBuilder.ToString().Contains(us))
+                    {
+                        // If the namespace hasn't been added, append it to the class builder
+                        classBuilder.AppendLine(us);
+                    }
                 }
                 classBuilder.AppendLine($@"
 namespace SourceDto;
@@ -142,22 +150,49 @@ public record class {className}
                     }
                     classBuilder.AppendLine("\t\treturn target;");
                     classBuilder.AppendLine("\t}");
-
-
-
+                    
                     // MapFromArray
+                    classBuilder.AppendLine($@"
+    /// <summary>
+    /// Maps an array of objects of type <see cref=""{param}""/> to an array of objects of type <see cref=""{className}""/>
+    /// </summary>
+    /// <param name=""source"">The array of objects of type <see cref=""{param}""/> to be mapped.</param>
+    /// <returns>The mapped array of objects of type <see cref=""{className}""/>.</returns>");
                     Map.FromArrayMethod(classBuilder, className, param);
-                    classBuilder.AppendLine("\n");
 
                     // MapToArray
+                    classBuilder.AppendLine($@"
+    /// <summary>
+    /// Maps an array of objects of type <see cref=""{className}""/> to an array of objects of type <see cref=""{param}""/>.
+    /// </summary>
+    /// <param name=""source"">The array of objects of type <see cref=""{className}""/> to be mapped.</param>
+    /// <returns>The mapped array of objects of type <see cref=""{param}""/>.</returns>");
                     Map.ToArrayMethod(classBuilder, param, className);
-                    
+
+                    // MapFromList
+                    classBuilder.AppendLine($@"
+    /// <summary>
+    /// Maps an <see cref=""IEnumerable""/> of objects of type <see cref=""{param}""/> to a <see cref=""List""/> of objects of type <see cref=""{className}""/>.
+    /// </summary>
+    /// <param name=""source"">The <see cref=""IEnumerable""/> of objects of type <see cref=""{param}""/> to be mapped.</param>
+    /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{className}""/>.</returns>");
+                    Map.FromEnumerableMethod(classBuilder, className, param);
+
+                    // MapFromList
+                    classBuilder.AppendLine($@"
+    /// <summary>
+    /// Maps an <see cref=""IEnumerable""/> of objects of type <see cref=""{className}""/> to a <see cref=""List""/> of objects of type <see cref=""{param}""/>.
+    /// </summary>
+    /// <param name=""source"">The <see cref=""IEnumerable""/> of objects of type <see cref=""{className}""/> to be mapped.</param>
+    /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{param}""/>.</returns>");
+                    Map.ToEnumerableMethod(classBuilder, param, className);
+
 
                     classBuilder.AppendLine("\n}");
 
 
                 }
-                
+
 
                 context.AddSource($"{className}{GeneratedFileSuffix}",
                     classBuilder.ToString());

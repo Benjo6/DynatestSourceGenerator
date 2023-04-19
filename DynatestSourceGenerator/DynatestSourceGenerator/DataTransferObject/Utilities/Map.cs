@@ -47,7 +47,7 @@ internal static class Map
                     name = Append.AppropriateDataTransferObjectNameList(name, usingSubstitute, replace);
 
                     props.Add(
-                        $"target.{propertyDeclaration.Identifier} = instance.{propertyDeclaration.Identifier}?.Select(t=>new {name}().MapFrom(t)).ToList();");
+                        $"target.{propertyDeclaration.Identifier} = {name}.MapFromList(instance.{propertyDeclaration.Identifier});");
                     continue;
                 }
 
@@ -57,7 +57,7 @@ internal static class Map
                     name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
 
                     props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {name}.MapFromArray({propertyDeclaration.Identifier});");
+                        $"target.{propertyDeclaration.Identifier} = {name}.MapFromArray(instance.{propertyDeclaration.Identifier});");
                     continue;
                 }
 
@@ -108,9 +108,10 @@ internal static class Map
                 
                 if (name.Contains("<"))
                 {
-                    
+                    name = Append.AppropriateDataTransferObjectNameList(name, usingSubstitute, replace);
+
                     props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {propertyDeclaration.Identifier}.Select(t=>t.MapTo()).ToList();");
+                        $"target.{propertyDeclaration.Identifier} = {name}.MapToList({propertyDeclaration.Identifier});");
                     continue;
                 }
 
@@ -144,6 +145,323 @@ internal static class Map
         }
 
         return props;
+    }
+
+    internal static void ToEnumerableMethod(StringBuilder classBuilder, string target, string source)
+    {
+        var mapToListMethod = LocalFunctionStatement(
+                GenericName(
+                    Identifier("List"))
+                .WithTypeArgumentList(
+                    TypeArgumentList(
+                        SingletonSeparatedList<TypeSyntax>(
+                            IdentifierName(target)))
+                    .WithGreaterThanToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.GreaterThanToken,
+                            TriviaList(
+                                Space)))),
+                Identifier("MapToList"))
+            .WithModifiers(
+                TokenList(Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.InternalKeyword,
+                        TriviaList(
+                            Space)), Token(
+                        TriviaList(),
+                        SyntaxKind.StaticKeyword,
+                        TriviaList(
+                            Space))))
+            .WithParameterList(
+                ParameterList(
+                    SingletonSeparatedList(
+                        Parameter(
+                            Identifier("source"))
+                        .WithType(
+                            GenericName(
+                                Identifier("IEnumerable"))
+                            .WithTypeArgumentList(
+                                TypeArgumentList(
+                                    SingletonSeparatedList<TypeSyntax>(
+                                        IdentifierName(source)))
+                                .WithGreaterThanToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.GreaterThanToken,
+                                        TriviaList(
+                                            Space)))))))
+                .WithCloseParenToken(
+                    Token(
+                        TriviaList(),
+                        SyntaxKind.CloseParenToken,
+                        TriviaList(
+                            CarriageReturnLineFeed))))
+            .WithBody(
+                Block(
+                    LocalDeclarationStatement(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "sourceList",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        ObjectCreationExpression(
+                                            GenericName(
+                                                Identifier("List"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                    SingletonSeparatedList<TypeSyntax>(
+                                                        IdentifierName(source)))))
+                                        .WithNewKeyword(
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.NewKeyword,
+                                                TriviaList(
+                                                    Space)))
+                                        .WithArgumentList(
+                                            ArgumentList(
+                                                SingletonSeparatedList(
+                                                    Argument(
+                                                        IdentifierName("source"))))))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    LocalDeclarationStatement(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "target",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        ObjectCreationExpression(
+                                            GenericName(
+                                                Identifier("List"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                    SingletonSeparatedList<TypeSyntax>(
+                                                        IdentifierName(target)))))
+                                        .WithNewKeyword(
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.NewKeyword,
+                                                TriviaList(
+                                                    Space)))
+                                        .WithArgumentList(
+                                            ArgumentList(
+                                                SingletonSeparatedList(
+                                                    Argument(
+                                                        MemberAccessExpression(
+                                                            SyntaxKind.SimpleMemberAccessExpression,
+                                                            IdentifierName("sourceList"),
+                                                            IdentifierName("Count")))))))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    ForStatement(
+                        Block(
+                            SingletonList<StatementSyntax>(
+                                ExpressionStatement(
+                                    InvocationExpression(
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            IdentifierName(
+                                                Identifier(
+                                                    TriviaList(
+                                                        Whitespace("            ")),
+                                                    "target",
+                                                    TriviaList())),
+                                            IdentifierName("Add")))
+                                    .WithArgumentList(
+                                        ArgumentList(
+                                            SingletonSeparatedList(
+                                                Argument(
+                                                    InvocationExpression(
+                                                        MemberAccessExpression(
+                                                            SyntaxKind.SimpleMemberAccessExpression,
+                                                            ElementAccessExpression(
+                                                                IdentifierName("sourceList"))
+                                                            .WithArgumentList(
+                                                                BracketedArgumentList(
+                                                                    SingletonSeparatedList(
+                                                                        Argument(
+                                                                            IdentifierName("i"))))),
+                                                            IdentifierName("MapTo"))))))))
+                                .WithSemicolonToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.SemicolonToken,
+                                        TriviaList(
+                                            CarriageReturnLineFeed)))))
+                        .WithOpenBraceToken(
+                            Token(
+                                TriviaList(
+                                    Whitespace("        ")),
+                                SyntaxKind.OpenBraceToken,
+                                TriviaList(
+                                    CarriageReturnLineFeed)))
+                        .WithCloseBraceToken(
+                            Token(
+                                TriviaList(
+                                    Whitespace("        ")),
+                                SyntaxKind.CloseBraceToken,
+                                TriviaList(
+                                    CarriageReturnLineFeed))))
+                    .WithForKeyword(
+                        Token(
+                            TriviaList(
+                                Whitespace("        ")),
+                            SyntaxKind.ForKeyword,
+                            TriviaList(
+                                Space)))
+                    .WithDeclaration(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "i",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        LiteralExpression(
+                                            SyntaxKind.NumericLiteralExpression,
+                                            Literal(0)))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithFirstSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                Space)))
+                    .WithCondition(
+                        BinaryExpression(
+                            SyntaxKind.LessThanExpression,
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(),
+                                    "i",
+                                    TriviaList(
+                                        Space))),
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("sourceList"),
+                                IdentifierName("Count")))
+                        .WithOperatorToken(
+                            Token(
+                                TriviaList(),
+                                SyntaxKind.LessThanToken,
+                                TriviaList(
+                                    Space))))
+                    .WithSecondSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                Space)))
+                    .WithIncrementors(
+                        SingletonSeparatedList<ExpressionSyntax>(
+                            PostfixUnaryExpression(
+                                SyntaxKind.PostIncrementExpression,
+                                IdentifierName("i"))))
+                    .WithCloseParenToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.CloseParenToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    ReturnStatement(
+                        IdentifierName("target"))
+                    .WithReturnKeyword(
+                        Token(
+                            TriviaList(
+                                Whitespace("        ")),
+                            SyntaxKind.ReturnKeyword,
+                            TriviaList(
+                                Space)))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))))
+                .WithOpenBraceToken(
+                    Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.OpenBraceToken,
+                        TriviaList(
+                            CarriageReturnLineFeed)))
+                .WithCloseBraceToken(
+                    Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.CloseBraceToken,
+                        TriviaList())));
+        classBuilder.Append($"\t{mapToListMethod}\n");
+
     }
 
     internal static void ToArrayMethod(StringBuilder classBuilder, string target, string source)
@@ -421,10 +739,337 @@ internal static class Map
                             SyntaxKind.CloseBraceToken,
                             TriviaList())));
 
-        classBuilder.Append($"\t{mapToArrayMethod}");
+        classBuilder.Append($"\t{mapToArrayMethod}\n");
     }
 
 
+    internal static void FromEnumerableMethod(StringBuilder classBuilder, string target, string source)
+    {
+        var mapFromListMethod = LocalFunctionStatement(
+                GenericName(
+                    Identifier("List"))
+                .WithTypeArgumentList(
+                    TypeArgumentList(
+                        SingletonSeparatedList<TypeSyntax>(
+                            IdentifierName(target)))
+                    .WithGreaterThanToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.GreaterThanToken,
+                            TriviaList(
+                                Space)))),
+                Identifier("MapFromList"))
+            .WithModifiers(
+                TokenList(Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.InternalKeyword,
+                        TriviaList(
+                            Space)), Token(
+                        TriviaList(),
+                        SyntaxKind.StaticKeyword,
+                        TriviaList(
+                            Space))))
+            .WithParameterList(
+                ParameterList(
+                    SingletonSeparatedList(
+                        Parameter(
+                            Identifier("source"))
+                        .WithType(
+                            GenericName(
+                                Identifier("IEnumerable"))
+                            .WithTypeArgumentList(
+                                TypeArgumentList(
+                                    SingletonSeparatedList<TypeSyntax>(
+                                        IdentifierName(source)))
+                                .WithGreaterThanToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.GreaterThanToken,
+                                        TriviaList(
+                                            Space)))))))
+                .WithCloseParenToken(
+                    Token(
+                        TriviaList(),
+                        SyntaxKind.CloseParenToken,
+                        TriviaList(
+                            CarriageReturnLineFeed))))
+            .WithBody(
+                Block(
+                    LocalDeclarationStatement(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "sourceList",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        ObjectCreationExpression(
+                                            GenericName(
+                                                Identifier("List"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                    SingletonSeparatedList<TypeSyntax>(
+                                                        IdentifierName(source)))))
+                                        .WithNewKeyword(
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.NewKeyword,
+                                                TriviaList(
+                                                    Space)))
+                                        .WithArgumentList(
+                                            ArgumentList(
+                                                SingletonSeparatedList(
+                                                    Argument(
+                                                        IdentifierName("source"))))))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    LocalDeclarationStatement(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "target",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        ObjectCreationExpression(
+                                            GenericName(
+                                                Identifier("List"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                    SingletonSeparatedList<TypeSyntax>(
+                                                        IdentifierName(target)))))
+                                        .WithNewKeyword(
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.NewKeyword,
+                                                TriviaList(
+                                                    Space)))
+                                        .WithArgumentList(
+                                            ArgumentList(
+                                                SingletonSeparatedList(
+                                                    Argument(
+                                                        MemberAccessExpression(
+                                                            SyntaxKind.SimpleMemberAccessExpression,
+                                                            IdentifierName("sourceList"),
+                                                            IdentifierName("Count")))))))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    ForStatement(
+                        Block(
+                            SingletonList<StatementSyntax>(
+                                ExpressionStatement(
+                                    InvocationExpression(
+                                        MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            IdentifierName(
+                                                Identifier(
+                                                    TriviaList(
+                                                        Whitespace("            ")),
+                                                    "target",
+                                                    TriviaList())),
+                                            IdentifierName("Add")))
+                                    .WithArgumentList(
+                                        ArgumentList(
+                                            SingletonSeparatedList(
+                                                Argument(
+                                                    InvocationExpression(
+                                                        MemberAccessExpression(
+                                                            SyntaxKind.SimpleMemberAccessExpression,
+                                                            ElementAccessExpression(
+                                                                IdentifierName("target"))
+                                                            .WithArgumentList(
+                                                                BracketedArgumentList(
+                                                                    SingletonSeparatedList(
+                                                                        Argument(
+                                                                            IdentifierName("i"))))),
+                                                            IdentifierName("MapFrom")))
+                                                    .WithArgumentList(
+                                                        ArgumentList(
+                                                            SingletonSeparatedList(
+                                                                Argument(
+                                                                    ElementAccessExpression(
+                                                                        IdentifierName("sourceList"))
+                                                                    .WithArgumentList(
+                                                                        BracketedArgumentList(
+                                                                            SingletonSeparatedList(
+                                                                                Argument(
+                                                                                    IdentifierName("i"))))))))))))))
+                                .WithSemicolonToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.SemicolonToken,
+                                        TriviaList(
+                                            CarriageReturnLineFeed)))))
+                        .WithOpenBraceToken(
+                            Token(
+                                TriviaList(
+                                    Whitespace("        ")),
+                                SyntaxKind.OpenBraceToken,
+                                TriviaList(
+                                    CarriageReturnLineFeed)))
+                        .WithCloseBraceToken(
+                            Token(
+                                TriviaList(
+                                    Whitespace("        ")),
+                                SyntaxKind.CloseBraceToken,
+                                TriviaList(
+                                    CarriageReturnLineFeed))))
+                    .WithForKeyword(
+                        Token(
+                            TriviaList(
+                                Whitespace("        ")),
+                            SyntaxKind.ForKeyword,
+                            TriviaList(
+                                Space)))
+                    .WithDeclaration(
+                        VariableDeclaration(
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(),
+                                    SyntaxKind.VarKeyword,
+                                    "var",
+                                    "var",
+                                    TriviaList(
+                                        Space))))
+                        .WithVariables(
+                            SingletonSeparatedList(
+                                VariableDeclarator(
+                                    Identifier(
+                                        TriviaList(),
+                                        "i",
+                                        TriviaList(
+                                            Space)))
+                                .WithInitializer(
+                                    EqualsValueClause(
+                                        LiteralExpression(
+                                            SyntaxKind.NumericLiteralExpression,
+                                            Literal(0)))
+                                    .WithEqualsToken(
+                                        Token(
+                                            TriviaList(),
+                                            SyntaxKind.EqualsToken,
+                                            TriviaList(
+                                                Space)))))))
+                    .WithFirstSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                Space)))
+                    .WithCondition(
+                        BinaryExpression(
+                            SyntaxKind.LessThanExpression,
+                            IdentifierName(
+                                Identifier(
+                                    TriviaList(),
+                                    "i",
+                                    TriviaList(
+                                        Space))),
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("sourceList"),
+                                IdentifierName("Count")))
+                        .WithOperatorToken(
+                            Token(
+                                TriviaList(),
+                                SyntaxKind.LessThanToken,
+                                TriviaList(
+                                    Space))))
+                    .WithSecondSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                Space)))
+                    .WithIncrementors(
+                        SingletonSeparatedList<ExpressionSyntax>(
+                            PostfixUnaryExpression(
+                                SyntaxKind.PostIncrementExpression,
+                                IdentifierName("i"))))
+                    .WithCloseParenToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.CloseParenToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))),
+                    ReturnStatement(
+                        IdentifierName("target"))
+                    .WithReturnKeyword(
+                        Token(
+                            TriviaList(
+                                Whitespace("        ")),
+                            SyntaxKind.ReturnKeyword,
+                            TriviaList(
+                                Space)))
+                    .WithSemicolonToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.SemicolonToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))))
+                .WithOpenBraceToken(
+                    Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.OpenBraceToken,
+                        TriviaList(
+                            CarriageReturnLineFeed)))
+                .WithCloseBraceToken(
+                    Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.CloseBraceToken,
+                        TriviaList())));
+        classBuilder.Append($"\t{mapFromListMethod}\n");
+
+    }
     internal static void FromArrayMethod(StringBuilder classBuilder, string target, string source)
     {
         var mapFromArray = LocalFunctionStatement(
@@ -707,7 +1352,7 @@ internal static class Map
                             Whitespace("    ")),
                         SyntaxKind.CloseBraceToken,
                         TriviaList())));
-        classBuilder.Append($"\t{mapFromArray}");
+        classBuilder.Append($"\t{mapFromArray}\n");
     }
 
 }
