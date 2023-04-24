@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-
 namespace DynatestSourceGenerator.DataTransferObject.Utilities;
 
 internal static class Map
@@ -41,41 +40,105 @@ internal static class Map
             {
                 var replace = Get.UsingArgumentReplace(useExisting, className);
                 var usingSubstitute = Get.UsingArgumentSubstitute(useExisting);
-                var name = propertyDeclaration.Type.ToString();
-                if (name.Contains("<"))
+                var name = propertyDeclaration.Type;
+                switch (name)
                 {
-                    // Find the index of the first '<' character in the string
-                    var startIndex = name.IndexOf("<", StringComparison.Ordinal);
+                    case ArrayTypeSyntax:
+                    {
+                        var type = Remove.ArrayBrackets(name.ToString());
+                        type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
 
-                    // Find the index of the closing '>' character in the string
-                    var endIndex = name.IndexOf(">", StringComparison.Ordinal);
+                        props.Add(
+                            $"target.{propertyDeclaration.Identifier} = {type}.MapFromArray(instance.{propertyDeclaration.Identifier});");
+                        break;
+                    }
+                    case GenericNameSyntax genericNameSyntax:
+                    {
+                        string? type;
+                        int startIndex;
+                        int endIndex;
+                        switch (genericNameSyntax.Identifier.Text)
+                        {
+                            case Types.IDictionaryT:
+                            case Types.DictionaryT:
+                            case Types.IReadOnlyDictionaryT:
+                                type = Append.AppropriateDataTransferObjectNameDicValueColumn(name.ToString(),
+                                    usingSubstitute, replace);
+                                props.Add($"if (instance.{propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapFromDictionary(instance.{propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.KeyValuePairT:
+                                props.Add(
+                                    $"target.{propertyDeclaration.Identifier} = MapFromKeyValuePair(instance.{propertyDeclaration.Identifier});");
+                                break;
+                            case Types.IEnumerableT:
+                            case Types.ICollectionT:
+                            case Types.IReadOnlyCollectionT:
+                            case Types.IListT:
+                            case Types.ListT:
+                            case Types.IReadOnlyListT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
 
-                    // Extract the type parameter from the original string
-                    var type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
-                    name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
 
-                    props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {name}.MapFromList(instance.{propertyDeclaration.Identifier});");
-                    continue;
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if (instance.{propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapFromList(instance.{propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.StackT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if (instance.{propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapFromStack(instance.{propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.QueueT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if (instance.{propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapFromQueue(instance.{propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.ImmutableArrayT:
+                                props.Add(
+                                    $"target.{propertyDeclaration.Identifier} = MapFromArray(instance.{propertyDeclaration.Identifier});");
+                                break;
+                        }
+                        break;
+                    }
+                    default:
+                        continue;
                 }
-
-                if (name.Contains("[]"))
-                {
-                    var type = Remove.ArrayBrackets(name);
-                    name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
-
-                    props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {name}.MapFromArray(instance.{propertyDeclaration.Identifier});");
-                    continue;
-                }
-
-                name = usingSubstitute ?? replace ?? $"{propertyDeclaration.Type}DTO";
-
-                props.Add(
-                    $"target.{propertyDeclaration.Identifier} = new {name}().MapFrom(instance.{propertyDeclaration.Identifier});");
             }
         }
-
         return props;
     }
     
@@ -112,56 +175,393 @@ internal static class Map
             {
                 var replace = Get.UsingArgumentReplace(useExisting, className);
                 var usingSubstitute = Get.UsingArgumentSubstitute(useExisting);
-                var name = propertyDeclaration.Type.ToString();
-                
-                if (name.Contains("<"))
-                { 
-                    // Find the index of the first '<' character in the string
-                    var startIndex = name.IndexOf("<", StringComparison.Ordinal);
-
-                    // Find the index of the closing '>' character in the string
-                    var endIndex = name.IndexOf(">", StringComparison.Ordinal);
-
-                    // Extract the type parameter from the original string
-                    var type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
-                    name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
-                    props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {name}.MapToList({propertyDeclaration.Identifier});");
-                    continue;
-                }
-
-                if (name.Contains("[]"))
+                var name = propertyDeclaration.Type;
+                switch (name)
                 {
-                    name = Remove.ArrayBrackets(name);
-                    name = Append.AppropriateDataTransferObjectName(name, usingSubstitute, replace);
-                    props.Add(
-                        $"target.{propertyDeclaration.Identifier} = {name}.MapToArray({propertyDeclaration.Identifier});");
-                    continue;
+                    case ArrayTypeSyntax:
+                    {
+                        var type = Remove.ArrayBrackets(name.ToString());
+                        type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+
+                        props.Add(
+                            $"target.{propertyDeclaration.Identifier} = {type}.MapToArray({propertyDeclaration.Identifier});");
+                        break;
+                    }
+                    case GenericNameSyntax genericNameSyntax:
+                    {
+                        string? type;
+                        int startIndex;
+                        int endIndex;
+                        switch (genericNameSyntax.Identifier.Text)
+                        {
+                            case Types.IDictionaryT:
+                            case Types.DictionaryT:
+                            case Types.IReadOnlyDictionaryT:
+                                type = Append.AppropriateDataTransferObjectNameDicValueColumn(name.ToString(),
+                                    usingSubstitute, replace);
+                                props.Add($"if ({propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapToDictionary({propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.KeyValuePairT:
+                                props.Add(
+                                    $"target.{propertyDeclaration.Identifier} = MapToKeyValuePair({propertyDeclaration.Identifier});");
+                                break;
+                            case Types.IEnumerableT:
+                            case Types.ICollectionT:
+                            case Types.IReadOnlyCollectionT:
+                            case Types.IListT:
+                            case Types.ListT:
+                            case Types.IReadOnlyListT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if ({propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapToList({propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.StackT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if ({propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapToStack({propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.QueueT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                props.Add($"if ({propertyDeclaration.Identifier} != null)");
+                                props.Add($"{{");
+                                props.Add(
+                                    $"\ttarget.{propertyDeclaration.Identifier} = {type}.MapToQueue({propertyDeclaration.Identifier});");
+                                props.Add($"}}");
+                                break;
+                            case Types.ImmutableArrayT:
+                                props.Add(
+                                    $"target.{propertyDeclaration.Identifier} = MapToArray({propertyDeclaration.Identifier});");
+                                break;
+                        }
+
+                        break;
+                    }
+                    default:
+                        continue;
                 }
-
-                var propAssignment = ExpressionStatement(
-                    AssignmentExpression(
-                        SyntaxKind.SimpleAssignmentExpression,
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("target"),
-                            IdentifierName(propertyName)),
-                        InvocationExpression(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName(propertyName),
-                                IdentifierName("MapTo"))))).NormalizeWhitespace();
-
-
-
-                props.Add(
-                    $"{propAssignment}");
             }
         }
 
         return props;
     }
 
+    internal static void FromKeyValuePairMethod(ClassDeclarationSyntax ClassDeclaration, string target, string source,
+        StringBuilder classBuilder)
+    {
+        classBuilder.AppendLine("\n");
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.KeyValuePair<int, {target}> MapFromKeyValuePair(System.Collections.Generic.KeyValuePair<int, {source}> source)");
+        classBuilder.AppendLine(
+            "\t{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.KeyValuePair<int, {target}>();");
+        classBuilder.AppendLine(
+            $"\t\tif (source.Value != null && target.Value != null)");
+        classBuilder.AppendLine(
+            $"\t\t{{");
+        foreach (var property in ClassDeclaration!.ChildNodes())
+        {
+            if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
+
+            var propertyName = propertyDeclaration.Identifier.Text;
+            var useExisting = Get.UsingExistingAttribute(propertyDeclaration);
+            if (useExisting == null)
+            {
+                if (propertyDeclaration.AccessorList == null ||
+                    propertyDeclaration.AccessorList.Accessors.All(a => a.Kind() != SyntaxKind.SetAccessorDeclaration))
+                {
+                }
+                else
+                {
+
+
+                    classBuilder.AppendLine($"\t\t\ttarget.Value.{propertyName} = source.Value.{propertyName};");
+                }
+            }
+            else
+            {
+                var replace = Get.UsingArgumentReplace(useExisting, target);
+                var usingSubstitute = Get.UsingArgumentSubstitute(useExisting);
+                var name = propertyDeclaration.Type;
+                switch (name)
+                {
+                    case ArrayTypeSyntax:
+                    {
+                        var type = Remove.ArrayBrackets(name.ToString());
+                        type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+
+                        classBuilder.AppendLine(
+                            $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapFromArray(source.Value.{propertyDeclaration.Identifier});");
+                        break;
+                    }
+                    case GenericNameSyntax genericNameSyntax:
+                    {
+                        string? type;
+                        int startIndex;
+                        int endIndex;
+                        switch (genericNameSyntax.Identifier.Text)
+                        {
+                            case Types.IDictionaryT:
+                            case Types.DictionaryT:
+                            case Types.IReadOnlyDictionaryT:
+                                type = Append.AppropriateDataTransferObjectNameDicValueColumn(name.ToString(),
+                                    usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapFromDictionary(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.KeyValuePairT:
+                                classBuilder.AppendLine(
+                                    $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = MapFromKeyValuePair(source.Value.{propertyDeclaration.Identifier});");
+                                break;
+                            case Types.IEnumerableT:
+                            case Types.ICollectionT:
+                            case Types.IReadOnlyCollectionT:
+                            case Types.IListT:
+                            case Types.ListT:
+                            case Types.IReadOnlyListT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapFromList(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine("\t\t\t}");
+                                break;
+                            case Types.StackT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapFromStack(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.QueueT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapFromQueue(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.ImmutableArrayT:
+                                classBuilder.AppendLine(
+                                    $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = MapFromImmutableArray(source.Value.{propertyDeclaration.Identifier});");
+                                break;
+                        }
+
+                        break;
+                    }
+                    default:
+                        continue;
+                }
+            }
+        }
+        classBuilder.AppendLine("\t\t}");
+        classBuilder.AppendLine("\t\treturn target;");
+        classBuilder.AppendLine("\t}");
+    } 
+    internal static void ToKeyValuePairMethod(ClassDeclarationSyntax ClassDeclaration, string target, string source,
+        StringBuilder classBuilder)
+    {
+        classBuilder.AppendLine("\n");
+
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.KeyValuePair<int, {target}> MapToKeyValuePair(System.Collections.Generic.KeyValuePair<int, {source}> source)");
+        classBuilder.AppendLine(
+            "\t{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.KeyValuePair<int, {target}>();");
+        classBuilder.AppendLine(
+            $"\t\tif (source.Value != null && target.Value != null)");
+        classBuilder.AppendLine(
+            $"\t\t{{");
+        foreach (var property in ClassDeclaration!.ChildNodes())
+        {
+            if (property is not PropertyDeclarationSyntax propertyDeclaration) continue;
+
+            var propertyName = propertyDeclaration.Identifier.Text;
+            var useExisting = Get.UsingExistingAttribute(propertyDeclaration);
+            if (useExisting == null)
+            {
+                if (propertyDeclaration.AccessorList == null ||
+                    propertyDeclaration.AccessorList.Accessors.All(a => a.Kind() != SyntaxKind.SetAccessorDeclaration))
+                {
+                }
+                else
+                {
+
+
+                    classBuilder.AppendLine($"\t\t\ttarget.Value.{propertyName} = source.Value.{propertyName};");
+                }
+            }
+            else
+            {
+                var replace = Get.UsingArgumentReplace(useExisting, target);
+                var usingSubstitute = Get.UsingArgumentSubstitute(useExisting);
+                var name = propertyDeclaration.Type;
+                switch (name)
+                {
+                    case ArrayTypeSyntax:
+                    {
+                        var type = Remove.ArrayBrackets(name.ToString());
+                        type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+
+                        classBuilder.AppendLine(
+                            $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapToArray(source.Value.{propertyDeclaration.Identifier});");
+                        break;
+                    }
+                    case GenericNameSyntax genericNameSyntax:
+                    {
+                        string? type;
+                        int startIndex;
+                        int endIndex;
+                        switch (genericNameSyntax.Identifier.Text)
+                        {
+                            case Types.IDictionaryT:
+                            case Types.DictionaryT:
+                            case Types.IReadOnlyDictionaryT:
+                                type = Append.AppropriateDataTransferObjectNameDicValueColumn(name.ToString(),
+                                    usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapToDictionary(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.KeyValuePairT:
+                                classBuilder.AppendLine(
+                                    $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = MapToKeyValuePair(source.Value.{propertyDeclaration.Identifier});");
+                                break;
+                            case Types.IEnumerableT:
+                            case Types.ICollectionT:
+                            case Types.IReadOnlyCollectionT:
+                            case Types.IListT:
+                            case Types.ListT:
+                            case Types.IReadOnlyListT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapToList(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine("\t\t\t}");
+                                break;
+                            case Types.StackT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapToStack(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.QueueT:
+                                // Find the index of the first '<' character in the string
+                                startIndex = name.ToString().IndexOf("<", StringComparison.Ordinal);
+
+                                // Find the index of the closing '>' character in the string
+                                endIndex = name.ToString().IndexOf(">", StringComparison.Ordinal);
+
+                                // Extract the type parameter from the original string
+                                type = name.ToString().Substring(startIndex + 1, endIndex - startIndex - 1);
+                                type = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
+                                classBuilder.AppendLine($"\t\t\tif (source.Value.{propertyDeclaration.Identifier} != null)");
+                                classBuilder.AppendLine($"\t\t\t{{");
+                                classBuilder.AppendLine(
+                                    $"\t\t\t\ttarget.Value.{propertyDeclaration.Identifier} = {type}.MapToQueue(source.Value.{propertyDeclaration.Identifier});");
+                                classBuilder.AppendLine($"\t\t\t}}");
+                                break;
+                            case Types.ImmutableArrayT:
+                                classBuilder.AppendLine(
+                                    $"\t\t\ttarget.Value.{propertyDeclaration.Identifier} = MapToImmutableArray(source.Value.{propertyDeclaration.Identifier});");
+                                break;
+                        }
+
+                        break;
+                    }
+                    default:
+                        continue;
+                }
+            }
+        }
+        classBuilder.AppendLine("\t\t}");
+        classBuilder.AppendLine("\t\treturn target;");
+        classBuilder.AppendLine("\t}");
+    }
     internal static void ToEnumerableMethod(StringBuilder classBuilder, string target, string source)
     {
         var mapToListMethod = LocalFunctionStatement(
@@ -478,7 +878,6 @@ internal static class Map
         classBuilder.Append($"\t{mapToListMethod}\n");
 
     }
-
     internal static void ToArrayMethod(StringBuilder classBuilder, string target, string source)
     {
         var mapToArrayMethod = LocalFunctionStatement(
@@ -756,8 +1155,6 @@ internal static class Map
 
         classBuilder.Append($"\t{mapToArrayMethod}\n");
     }
-
-
     internal static void FromEnumerableMethod(StringBuilder classBuilder, string target, string source)
     {
         var mapFromListMethod = LocalFunctionStatement(
@@ -1369,5 +1766,657 @@ internal static class Map
                         TriviaList())));
         classBuilder.Append($"\t{mapFromArray}\n");
     }
-
+    internal static void ToDictionaryMethod(StringBuilder classBuilder, string target, string source)
+    {
+        var mapToIDictionary = LocalFunctionStatement(
+                QualifiedName(
+                    QualifiedName(
+                        QualifiedName(
+                            IdentifierName("System"),
+                            IdentifierName("Collections")),
+                        IdentifierName("Generic")),
+                    GenericName(
+                            Identifier("IDictionary"))
+                        .WithTypeArgumentList(
+                            TypeArgumentList(
+                                    SeparatedList<TypeSyntax>(
+                                        new SyntaxNodeOrToken[]
+                                        {
+                                            PredefinedType(
+                                                Token(SyntaxKind.IntKeyword)),
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.CommaToken,
+                                                TriviaList(
+                                                    Space)),
+                                            IdentifierName(target)
+                                        }))
+                                .WithGreaterThanToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.GreaterThanToken,
+                                        TriviaList(
+                                            Space))))),
+                Identifier("MapToDictionary"))
+            .WithModifiers(
+                TokenList(Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.InternalKeyword,
+                        TriviaList(
+                            Space)), Token(
+                        TriviaList(),
+                        SyntaxKind.StaticKeyword,
+                        TriviaList(
+                            Space))))
+            .WithParameterList(
+                ParameterList(
+                        SingletonSeparatedList<ParameterSyntax>(
+                            Parameter(
+                                    Identifier("source"))
+                                .WithType(
+                                    QualifiedName(
+                                        QualifiedName(
+                                            QualifiedName(
+                                                IdentifierName("System"),
+                                                IdentifierName("Collections")),
+                                            IdentifierName("Generic")),
+                                        GenericName(
+                                                Identifier("IDictionary"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                        SeparatedList<TypeSyntax>(
+                                                            new SyntaxNodeOrToken[]
+                                                            {
+                                                                PredefinedType(
+                                                                    Token(SyntaxKind.IntKeyword)),
+                                                                Token(
+                                                                    TriviaList(),
+                                                                    SyntaxKind.CommaToken,
+                                                                    TriviaList(
+                                                                        Space)),
+                                                                IdentifierName(source)
+                                                            }))
+                                                    .WithGreaterThanToken(
+                                                        Token(
+                                                            TriviaList(),
+                                                            SyntaxKind.GreaterThanToken,
+                                                            TriviaList(
+                                                                Space))))))))
+                    .WithCloseParenToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.CloseParenToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))))
+            .WithBody(
+                Block(
+                        LocalDeclarationStatement(
+                                VariableDeclaration(
+                                        IdentifierName(
+                                            Identifier(
+                                                TriviaList(
+                                                    Whitespace("        ")),
+                                                SyntaxKind.VarKeyword,
+                                                "var",
+                                                "var",
+                                                TriviaList(
+                                                    Space))))
+                                    .WithVariables(
+                                        SingletonSeparatedList<VariableDeclaratorSyntax>(
+                                            VariableDeclarator(
+                                                    Identifier(
+                                                        TriviaList(),
+                                                        "target",
+                                                        TriviaList(
+                                                            Space)))
+                                                .WithInitializer(
+                                                    EqualsValueClause(
+                                                            ObjectCreationExpression(
+                                                                    QualifiedName(
+                                                                        QualifiedName(
+                                                                            QualifiedName(
+                                                                                IdentifierName("System"),
+                                                                                IdentifierName("Collections")),
+                                                                            IdentifierName("Generic")),
+                                                                        GenericName(
+                                                                                Identifier("Dictionary"))
+                                                                            .WithTypeArgumentList(
+                                                                                TypeArgumentList(
+                                                                                    SeparatedList<TypeSyntax>(
+                                                                                        new SyntaxNodeOrToken[]
+                                                                                        {
+                                                                                            PredefinedType(
+                                                                                                Token(SyntaxKind
+                                                                                                    .IntKeyword)),
+                                                                                            Token(
+                                                                                                TriviaList(),
+                                                                                                SyntaxKind.CommaToken,
+                                                                                                TriviaList(
+                                                                                                    Space)),
+                                                                                            NullableType(
+                                                                                                IdentifierName(
+                                                                                                    target))
+                                                                                        })))))
+                                                                .WithNewKeyword(
+                                                                    Token(
+                                                                        TriviaList(),
+                                                                        SyntaxKind.NewKeyword,
+                                                                        TriviaList(
+                                                                            Space)))
+                                                                .WithArgumentList(
+                                                                    ArgumentList(
+                                                                        SingletonSeparatedList<ArgumentSyntax>(
+                                                                            Argument(
+                                                                                MemberAccessExpression(
+                                                                                    SyntaxKind
+                                                                                        .SimpleMemberAccessExpression,
+                                                                                    IdentifierName("source"),
+                                                                                    IdentifierName("Count")))))))
+                                                        .WithEqualsToken(
+                                                            Token(
+                                                                TriviaList(),
+                                                                SyntaxKind.EqualsToken,
+                                                                TriviaList(
+                                                                    Space)))))))
+                            .WithSemicolonToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.SemicolonToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))),
+                        ForEachStatement(
+                                IdentifierName(
+                                    Identifier(
+                                        TriviaList(),
+                                        SyntaxKind.VarKeyword,
+                                        "var",
+                                        "var",
+                                        TriviaList(
+                                            Space))),
+                                Identifier(
+                                    TriviaList(),
+                                    "item",
+                                    TriviaList(
+                                        Space)),
+                                IdentifierName("source"),
+                                Block(
+                                        SingletonList<StatementSyntax>(
+                                            ExpressionStatement(
+                                                    AssignmentExpression(
+                                                            SyntaxKind.SimpleAssignmentExpression,
+                                                            ElementAccessExpression(
+                                                                    IdentifierName(
+                                                                        Identifier(
+                                                                            TriviaList(
+                                                                                Whitespace("            ")),
+                                                                            "target",
+                                                                            TriviaList())))
+                                                                .WithArgumentList(
+                                                                    BracketedArgumentList(
+                                                                            SingletonSeparatedList<ArgumentSyntax>(
+                                                                                Argument(
+                                                                                    MemberAccessExpression(
+                                                                                        SyntaxKind
+                                                                                            .SimpleMemberAccessExpression,
+                                                                                        IdentifierName("item"),
+                                                                                        IdentifierName("Key")))))
+                                                                        .WithCloseBracketToken(
+                                                                            Token(
+                                                                                TriviaList(),
+                                                                                SyntaxKind.CloseBracketToken,
+                                                                                TriviaList(
+                                                                                    Space)))),
+                                                            InvocationExpression(
+                                                                MemberAccessExpression(
+                                                                    SyntaxKind.SimpleMemberAccessExpression,
+                                                                    ElementAccessExpression(
+                                                                            IdentifierName("source"))
+                                                                        .WithArgumentList(
+                                                                            BracketedArgumentList(
+                                                                                SingletonSeparatedList<ArgumentSyntax>(
+                                                                                    Argument(
+                                                                                        MemberAccessExpression(
+                                                                                            SyntaxKind
+                                                                                                .SimpleMemberAccessExpression,
+                                                                                            IdentifierName("item"),
+                                                                                            IdentifierName("Key")))))),
+                                                                    IdentifierName("MapTo"))))
+                                                        .WithOperatorToken(
+                                                            Token(
+                                                                TriviaList(),
+                                                                SyntaxKind.EqualsToken,
+                                                                TriviaList(
+                                                                    Space))))
+                                                .WithSemicolonToken(
+                                                    Token(
+                                                        TriviaList(),
+                                                        SyntaxKind.SemicolonToken,
+                                                        TriviaList(
+                                                            CarriageReturnLineFeed)))))
+                                    .WithOpenBraceToken(
+                                        Token(
+                                            TriviaList(
+                                                Whitespace("        ")),
+                                            SyntaxKind.OpenBraceToken,
+                                            TriviaList(
+                                                CarriageReturnLineFeed)))
+                                    .WithCloseBraceToken(
+                                        Token(
+                                            TriviaList(
+                                                Whitespace("        ")),
+                                            SyntaxKind.CloseBraceToken,
+                                            TriviaList(
+                                                CarriageReturnLineFeed))))
+                            .WithForEachKeyword(
+                                Token(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.ForEachKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithInKeyword(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.InKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithCloseParenToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.CloseParenToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))),
+                        ReturnStatement(
+                                IdentifierName("target"))
+                            .WithReturnKeyword(
+                                Token(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.ReturnKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithSemicolonToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.SemicolonToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))))
+                    .WithOpenBraceToken(
+                        Token(
+                            TriviaList(
+                                Whitespace("    ")),
+                            SyntaxKind.OpenBraceToken,
+                            TriviaList(
+                                CarriageReturnLineFeed)))
+                    .WithCloseBraceToken(
+                        Token(
+                            TriviaList(
+                                Whitespace("    ")),
+                            SyntaxKind.CloseBraceToken,
+                            TriviaList())));
+        classBuilder.Append($"\t{mapToIDictionary}\n");
+    }
+    internal static void FromDictionaryMethod(StringBuilder classBuilder, string target, string source)
+    {
+        var mapFromIDictionary = LocalFunctionStatement(
+                QualifiedName(
+                    QualifiedName(
+                        QualifiedName(
+                            IdentifierName("System"),
+                            IdentifierName("Collections")),
+                        IdentifierName("Generic")),
+                    GenericName(
+                            Identifier("IDictionary"))
+                        .WithTypeArgumentList(
+                            TypeArgumentList(
+                                    SeparatedList<TypeSyntax>(
+                                        new SyntaxNodeOrToken[]
+                                        {
+                                            PredefinedType(
+                                                Token(SyntaxKind.IntKeyword)),
+                                            Token(
+                                                TriviaList(),
+                                                SyntaxKind.CommaToken,
+                                                TriviaList(
+                                                    Space)),
+                                            IdentifierName(target)
+                                        }))
+                                .WithGreaterThanToken(
+                                    Token(
+                                        TriviaList(),
+                                        SyntaxKind.GreaterThanToken,
+                                        TriviaList(
+                                            Space))))),
+                Identifier("MapFromDictionary"))
+            .WithModifiers(
+                TokenList(Token(
+                        TriviaList(
+                            Whitespace("    ")),
+                        SyntaxKind.InternalKeyword,
+                        TriviaList(
+                            Space)), Token(
+                        TriviaList(),
+                        SyntaxKind.StaticKeyword,
+                        TriviaList(
+                            Space))))
+            .WithParameterList(
+                ParameterList(
+                        SingletonSeparatedList<ParameterSyntax>(
+                            Parameter(
+                                    Identifier("source"))
+                                .WithType(
+                                    QualifiedName(
+                                        QualifiedName(
+                                            QualifiedName(
+                                                IdentifierName("System"),
+                                                IdentifierName("Collections")),
+                                            IdentifierName("Generic")),
+                                        GenericName(
+                                                Identifier("IDictionary"))
+                                            .WithTypeArgumentList(
+                                                TypeArgumentList(
+                                                        SeparatedList<TypeSyntax>(
+                                                            new SyntaxNodeOrToken[]
+                                                            {
+                                                                PredefinedType(
+                                                                    Token(SyntaxKind.IntKeyword)),
+                                                                Token(
+                                                                    TriviaList(),
+                                                                    SyntaxKind.CommaToken,
+                                                                    TriviaList(
+                                                                        Space)),
+                                                                IdentifierName(source)
+                                                            }))
+                                                    .WithGreaterThanToken(
+                                                        Token(
+                                                            TriviaList(),
+                                                            SyntaxKind.GreaterThanToken,
+                                                            TriviaList(
+                                                                Space))))))))
+                    .WithCloseParenToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.CloseParenToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))))
+            .WithBody(
+                Block(
+                        LocalDeclarationStatement(
+                                VariableDeclaration(
+                                        IdentifierName(
+                                            Identifier(
+                                                TriviaList(
+                                                    Whitespace("        ")),
+                                                SyntaxKind.VarKeyword,
+                                                "var",
+                                                "var",
+                                                TriviaList(
+                                                    Space))))
+                                    .WithVariables(
+                                        SingletonSeparatedList<VariableDeclaratorSyntax>(
+                                            VariableDeclarator(
+                                                    Identifier(
+                                                        TriviaList(),
+                                                        "target",
+                                                        TriviaList(
+                                                            Space)))
+                                                .WithInitializer(
+                                                    EqualsValueClause(
+                                                            ObjectCreationExpression(
+                                                                    QualifiedName(
+                                                                        QualifiedName(
+                                                                            QualifiedName(
+                                                                                IdentifierName("System"),
+                                                                                IdentifierName("Collections")),
+                                                                            IdentifierName("Generic")),
+                                                                        GenericName(
+                                                                                Identifier("Dictionary"))
+                                                                            .WithTypeArgumentList(
+                                                                                TypeArgumentList(
+                                                                                    SeparatedList<TypeSyntax>(
+                                                                                        new SyntaxNodeOrToken[]
+                                                                                        {
+                                                                                            PredefinedType(
+                                                                                                Token(SyntaxKind
+                                                                                                    .IntKeyword)),
+                                                                                            Token(
+                                                                                                TriviaList(),
+                                                                                                SyntaxKind.CommaToken,
+                                                                                                TriviaList(
+                                                                                                    Space)),
+                                                                                            NullableType(
+                                                                                                IdentifierName(
+                                                                                                    target))
+                                                                                        })))))
+                                                                .WithNewKeyword(
+                                                                    Token(
+                                                                        TriviaList(),
+                                                                        SyntaxKind.NewKeyword,
+                                                                        TriviaList(
+                                                                            Space)))
+                                                                .WithArgumentList(
+                                                                    ArgumentList(
+                                                                        SingletonSeparatedList<ArgumentSyntax>(
+                                                                            Argument(
+                                                                                MemberAccessExpression(
+                                                                                    SyntaxKind
+                                                                                        .SimpleMemberAccessExpression,
+                                                                                    IdentifierName("source"),
+                                                                                    IdentifierName("Count")))))))
+                                                        .WithEqualsToken(
+                                                            Token(
+                                                                TriviaList(),
+                                                                SyntaxKind.EqualsToken,
+                                                                TriviaList(
+                                                                    Space)))))))
+                            .WithSemicolonToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.SemicolonToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))),
+                        ForEachStatement(
+                                IdentifierName(
+                                    Identifier(
+                                        TriviaList(),
+                                        SyntaxKind.VarKeyword,
+                                        "var",
+                                        "var",
+                                        TriviaList(
+                                            Space))),
+                                Identifier(
+                                    TriviaList(),
+                                    "item",
+                                    TriviaList(
+                                        Space)),
+                                IdentifierName("source"),
+                                Block(
+                                        SingletonList<StatementSyntax>(
+                                            ExpressionStatement(
+                                                    AssignmentExpression(
+                                                            SyntaxKind.SimpleAssignmentExpression,
+                                                            ElementAccessExpression(
+                                                                    IdentifierName(
+                                                                        Identifier(
+                                                                            TriviaList(
+                                                                                Whitespace("            ")),
+                                                                            "target",
+                                                                            TriviaList())))
+                                                                .WithArgumentList(
+                                                                    BracketedArgumentList(
+                                                                            SingletonSeparatedList<ArgumentSyntax>(
+                                                                                Argument(
+                                                                                    MemberAccessExpression(
+                                                                                        SyntaxKind
+                                                                                            .SimpleMemberAccessExpression,
+                                                                                        IdentifierName("item"),
+                                                                                        IdentifierName("Key")))))
+                                                                        .WithCloseBracketToken(
+                                                                            Token(
+                                                                                TriviaList(),
+                                                                                SyntaxKind.CloseBracketToken,
+                                                                                TriviaList(
+                                                                                    Space)))),
+                                                            InvocationExpression(
+                                                                    MemberAccessExpression(
+                                                                        SyntaxKind.SimpleMemberAccessExpression,
+                                                                        ElementAccessExpression(
+                                                                                IdentifierName("target"))
+                                                                            .WithArgumentList(
+                                                                                BracketedArgumentList(
+                                                                                    SingletonSeparatedList<
+                                                                                        ArgumentSyntax>(
+                                                                                        Argument(
+                                                                                            MemberAccessExpression(
+                                                                                                SyntaxKind
+                                                                                                    .SimpleMemberAccessExpression,
+                                                                                                IdentifierName("item"),
+                                                                                                IdentifierName(
+                                                                                                    "Key")))))),
+                                                                        IdentifierName("MapFrom")))
+                                                                .WithArgumentList(
+                                                                    ArgumentList(
+                                                                        SingletonSeparatedList<ArgumentSyntax>(
+                                                                            Argument(
+                                                                                MemberAccessExpression(
+                                                                                    SyntaxKind
+                                                                                        .SimpleMemberAccessExpression,
+                                                                                    IdentifierName("item"),
+                                                                                    IdentifierName("Value")))))))
+                                                        .WithOperatorToken(
+                                                            Token(
+                                                                TriviaList(),
+                                                                SyntaxKind.EqualsToken,
+                                                                TriviaList(
+                                                                    Space))))
+                                                .WithSemicolonToken(
+                                                    Token(
+                                                        TriviaList(),
+                                                        SyntaxKind.SemicolonToken,
+                                                        TriviaList(
+                                                            CarriageReturnLineFeed)))))
+                                    .WithOpenBraceToken(
+                                        Token(
+                                            TriviaList(
+                                                Whitespace("        ")),
+                                            SyntaxKind.OpenBraceToken,
+                                            TriviaList(
+                                                CarriageReturnLineFeed)))
+                                    .WithCloseBraceToken(
+                                        Token(
+                                            TriviaList(
+                                                Whitespace("        ")),
+                                            SyntaxKind.CloseBraceToken,
+                                            TriviaList(
+                                                CarriageReturnLineFeed))))
+                            .WithForEachKeyword(
+                                Token(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.ForEachKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithInKeyword(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.InKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithCloseParenToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.CloseParenToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))),
+                        ReturnStatement(
+                                IdentifierName("target"))
+                            .WithReturnKeyword(
+                                Token(
+                                    TriviaList(
+                                        Whitespace("        ")),
+                                    SyntaxKind.ReturnKeyword,
+                                    TriviaList(
+                                        Space)))
+                            .WithSemicolonToken(
+                                Token(
+                                    TriviaList(),
+                                    SyntaxKind.SemicolonToken,
+                                    TriviaList(
+                                        CarriageReturnLineFeed))))
+                    .WithOpenBraceToken(
+                        Token(
+                            TriviaList(
+                                Whitespace("    ")),
+                            SyntaxKind.OpenBraceToken,
+                            TriviaList(
+                                CarriageReturnLineFeed)))
+                    .WithCloseBraceToken(
+                        Token(
+                            TriviaList(
+                                Whitespace("    ")),
+                            SyntaxKind.CloseBraceToken,
+                            TriviaList())));
+        classBuilder.Append($"\t{mapFromIDictionary}\n");
+    }
+    internal static void FromStack(StringBuilder classBuilder, string target, string source)
+    {
+        classBuilder.AppendLine(
+            $"\n");
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.Stack<{target}> MapFromStack(System.Collections.Generic.Stack<{source}> source)");
+        classBuilder.AppendLine(
+            $"\t{{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.Stack<{target}>();");
+        classBuilder.AppendLine(
+            $"\t\treturn target;");
+        classBuilder.AppendLine(
+            $"\t}}");
+    }
+    internal static void ToStack(StringBuilder classBuilder, string target, string source)
+    {
+        classBuilder.AppendLine(
+            $"\n");
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.Stack<{target}> MapToStack(System.Collections.Generic.Stack<{source}> source)");
+        classBuilder.AppendLine(
+            $"\t{{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.Stack<{target}>();");
+        classBuilder.AppendLine(
+            $"\t\treturn target;");
+        classBuilder.AppendLine(
+            $"\t}}");
+    }
+    internal static void FromQueue(StringBuilder classBuilder, string target, string source)
+    {
+        classBuilder.AppendLine(
+            $"\n");
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.Queue<{target}> MapFromQueue(System.Collections.Generic.Queue<{source}> source)");
+        classBuilder.AppendLine(
+            $"\t{{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.Queue<{target}>();");
+        classBuilder.AppendLine(
+            $"\t\treturn target;");
+        classBuilder.AppendLine(
+            $"\t}}");
+    }
+    internal static void ToQueue(StringBuilder classBuilder, string target, string source)
+    {
+        classBuilder.AppendLine(
+            $"\n");
+        classBuilder.AppendLine(
+            $"\tinternal static System.Collections.Generic.Queue<{target}> MapToQueue(System.Collections.Generic.Queue<{source}> source)");
+        classBuilder.AppendLine(
+            $"\t{{");
+        classBuilder.AppendLine(
+            $"\t\tvar target = new System.Collections.Generic.Queue<{target}>();");
+        classBuilder.AppendLine(
+            $"\t\treturn target;");
+        classBuilder.AppendLine(
+            $"\t}}");
+    }
 }

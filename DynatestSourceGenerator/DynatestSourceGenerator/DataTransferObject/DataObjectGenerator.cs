@@ -158,7 +158,7 @@ public record class {className}
     /// </summary>
     /// <param name=""source"">The array of objects of type <see cref=""{param}""/> to be mapped.</param>
     /// <returns>The mapped array of objects of type <see cref=""{className}""/>.</returns>");
-                    Map.FromArrayMethod(classBuilder, className, param);
+                    Map.FromArrayMethod(classBuilder,className, param);
 
                     // MapToArray
                     classBuilder.AppendLine($@"
@@ -186,6 +186,22 @@ public record class {className}
     /// <param name=""source"">The <see cref=""IEnumerable""/> of objects of type <see cref=""{className}""/> to be mapped.</param>
     /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{param}""/>.</returns>");
                     Map.ToEnumerableMethod(classBuilder, param, className);
+
+                    Map.FromDictionaryMethod(classBuilder,className,param);
+                    
+                    Map.ToDictionaryMethod(classBuilder,param,className);
+
+                    Map.FromKeyValuePairMethod(classDeclarationSyntax,className,param,classBuilder);
+
+                    Map.ToKeyValuePairMethod(classDeclarationSyntax,param,className,classBuilder);
+                    
+                    Map.FromStack(classBuilder,className,param);
+
+                    Map.ToStack(classBuilder,param,className);
+                    
+                    Map.FromQueue(classBuilder,className,param);
+
+                    Map.ToQueue(classBuilder,param,className);
 
 
                     classBuilder.AppendLine("\n}");

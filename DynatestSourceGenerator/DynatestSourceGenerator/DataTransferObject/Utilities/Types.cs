@@ -12,7 +12,6 @@ public static class Types
     public const string IDictionaryT = "IDictionary";
     public const string IReadOnlyDictionaryT = "IReadOnlyDictionary";
     public const string IEnumerableT =  "IEnumerable";
-    public const string Enumerable = "Enumerable";
     public const string ICollectionT = "ICollection";
     public const string IReadOnlyCollectionT = "IReadOnlyCollection";
     public const string IListT = "IList";

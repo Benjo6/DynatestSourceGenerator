@@ -87,7 +87,7 @@ internal static class Get
                         case Types.IImmutableDictionaryT:
                         case Types.ImmutableDictionaryT:
                         case Types.ImmutableSortedDictionaryT:
-                            dto = Append.AppropriateDataTransferObjectNameDictionary(dto, usingSubstitute, replace,property);
+                            dto = Append.AppropriateDataTransferObjectNameDictionary(dto, usingSubstitute, replace);
                             dto = dto.GetLastPart("]");
                             prop = SyntaxFactory.ParseMemberDeclaration($"{dto.TrimStart()}");
                             props.Add($"{prop}");

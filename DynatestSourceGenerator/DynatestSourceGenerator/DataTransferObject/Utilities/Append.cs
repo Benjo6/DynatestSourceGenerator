@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -56,7 +57,7 @@ internal static class Append
     }
     
     internal static string AppropriateDataTransferObjectNameDictionary(string name, string? substituteName,
-        string? replacementName, PropertyDeclarationSyntax propertyDeclaration)
+        string? replacementName)
     {
         // Define a regular expression pattern to match the type parameter in the input string
         var pattern = @"(?<=<)\s*(?<keyType>[^,]+)\s*,\s*(?<valueType>[^>]+)\s*(?=>)";
@@ -66,22 +67,24 @@ internal static class Append
         // Extract the key and value types from the match
         var keyType = match.Groups["keyType"].Value.Trim();
         var valueType = match.Groups["valueType"].Value.Trim();
-        
-        if (propertyDeclaration.Type.ToString().Contains(valueType))
-        {
-            valueType = substituteName ?? replacementName ?? $"{valueType}DTO";
-        }
-
-        if (propertyDeclaration.Type.ToString().Contains(keyType))
-        {
-            keyType = substituteName ?? replacementName ?? $"{keyType}DTO";
-
-        }
-
+        valueType = substituteName ?? replacementName ?? $"{valueType}DTO";
         // Replace the original type parameter with the modified types
         name = Regex.Replace(name, pattern, $"{keyType}, {valueType}");
 
         return name;
+    }
+    internal static string AppropriateDataTransferObjectNameDicValueColumn(string name, string? substituteName,
+        string? replacementName)
+    {
+        // Define a regular expression pattern to match the type parameter in the input string
+        var pattern = @"(?<=<)\s*(?<keyType>[^,]+)\s*,\s*(?<valueType>[^>]+)\s*(?=>)";
+        // Use the regular expression to find the key and value types in the input string
+        var match = Regex.Match(name, pattern);
+
+        var valueType = match.Groups["valueType"].Value.Trim();
+        valueType = substituteName ?? replacementName ?? $"{valueType}DTO";
+
+        return valueType;
     }
 
     internal static string AppropriateDataTransferObjectName(string name, string? substituteName,
@@ -103,4 +106,10 @@ internal static class Append
 
         return name;
     }
+    private static Boolean CanCovert(String value, Type type)
+    {
+        TypeConverter converter = TypeDescriptor.GetConverter(type);
+        return converter.IsValid(value);
+    }
+    
 }
