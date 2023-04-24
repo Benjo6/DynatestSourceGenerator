@@ -44,7 +44,15 @@ internal static class Map
                 var name = propertyDeclaration.Type.ToString();
                 if (name.Contains("<"))
                 {
-                    name = Append.AppropriateDataTransferObjectNameList(name, usingSubstitute, replace);
+                    // Find the index of the first '<' character in the string
+                    var startIndex = name.IndexOf("<", StringComparison.Ordinal);
+
+                    // Find the index of the closing '>' character in the string
+                    var endIndex = name.IndexOf(">", StringComparison.Ordinal);
+
+                    // Extract the type parameter from the original string
+                    var type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
+                    name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
 
                     props.Add(
                         $"target.{propertyDeclaration.Identifier} = {name}.MapFromList(instance.{propertyDeclaration.Identifier});");
@@ -107,9 +115,16 @@ internal static class Map
                 var name = propertyDeclaration.Type.ToString();
                 
                 if (name.Contains("<"))
-                {
-                    name = Append.AppropriateDataTransferObjectNameList(name, usingSubstitute, replace);
+                { 
+                    // Find the index of the first '<' character in the string
+                    var startIndex = name.IndexOf("<", StringComparison.Ordinal);
 
+                    // Find the index of the closing '>' character in the string
+                    var endIndex = name.IndexOf(">", StringComparison.Ordinal);
+
+                    // Extract the type parameter from the original string
+                    var type = name.Substring(startIndex + 1, endIndex - startIndex - 1);
+                    name = Append.AppropriateDataTransferObjectName(type, usingSubstitute, replace);
                     props.Add(
                         $"target.{propertyDeclaration.Identifier} = {name}.MapToList({propertyDeclaration.Identifier});");
                     continue;

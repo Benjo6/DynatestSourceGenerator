@@ -16,7 +16,7 @@ namespace Demo
 
         
         // Array
-        [UseExistingDto]
+        [UseExistingDto("TestingWeather")]
         public WeatherForecast[] Forecasts { get; set; }
         
         
@@ -24,8 +24,12 @@ namespace Demo
 
         [UseExistingDto ("TestingWeather")]
         public List<WeatherForecast> Fore { get; set; }
+        
 
-
-
+        [UseExistingDto ("TestingWeather")]
+        public string Cla { get; set; }
+        
+        [UseExistingDto ("TestingWeather")]
+        public WeatherForecast Clay { get; set; }
     }
 }
