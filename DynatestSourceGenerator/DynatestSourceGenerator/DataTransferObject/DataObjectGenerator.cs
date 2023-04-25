@@ -190,10 +190,18 @@ public record class {className}
                     Map.FromDictionaryMethod(classBuilder,className,param);
                     
                     Map.ToDictionaryMethod(classBuilder,param,className);
+                    
+                    Map.FromIDictionaryMethod(classBuilder,className,param);
+                    
+                    Map.ToIDictionaryMethod(classBuilder,param,className);
+                    
+                    Map.FromIReadOnlyDictionaryMethod(classBuilder,className,param);
+                    
+                    Map.ToIReadOnlyDictionaryMethod(classBuilder,param,className);
 
-                    Map.FromKeyValuePairMethod(classDeclarationSyntax,className,param,classBuilder);
+                    Map.FromKeyValuePairMethod(classWithoutExcludedProperties,className,param,classBuilder);
 
-                    Map.ToKeyValuePairMethod(classDeclarationSyntax,param,className,classBuilder);
+                    Map.ToKeyValuePairMethod(classWithoutExcludedProperties,param,className,classBuilder);
                     
                     Map.FromStack(classBuilder,className,param);
 

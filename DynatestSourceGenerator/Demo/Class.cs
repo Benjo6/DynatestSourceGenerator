@@ -12,7 +12,7 @@ namespace Demo
         
         // Dictionary
         [UseExistingDto ("TestingWeather")]
-        public Dictionary<int,WeatherForecast> WeatherForecasts { get; set; }
+        public IReadOnlyDictionary<int,WeatherForecast> WeatherForecasts { get; set; }
 
         
         // Array
