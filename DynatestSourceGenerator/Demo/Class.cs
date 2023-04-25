@@ -12,16 +12,14 @@ namespace Demo
         
         // Dictionary
         [UseExistingDto ("TestingWeather")]
-        public IReadOnlyDictionary<int,WeatherForecast> WeatherForecasts { get; set; }
+        public IDictionary<int,WeatherForecast> WeatherForecasts { get; set; }
 
         
         // Array
         [UseExistingDto("TestingWeather")]
         public WeatherForecast[] Forecasts { get; set; }
         
-        
         //List
-
         [UseExistingDto ("TestingWeather")]
         public List<WeatherForecast> Fore { get; set; }
         

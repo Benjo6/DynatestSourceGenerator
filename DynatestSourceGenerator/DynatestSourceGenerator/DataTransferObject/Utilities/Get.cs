@@ -12,7 +12,7 @@ namespace DynatestSourceGenerator.DataTransferObject.Utilities;
 
 internal static class Get
 {
-    internal static IEnumerable<string> Properties(ClassDeclarationSyntax classDeclarationSyntax, string className)
+    internal static IEnumerable<string> Properties(ClassDeclarationSyntax? classDeclarationSyntax, string className)
     {
         var props = new List<string>();
 
