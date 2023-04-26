@@ -10,6 +10,11 @@
     <Description>The Source Generator package is a comprehensive toolkit for developers who need to generate source code automatically. This package contains a range of attributes that are specifically designed to help streamline the code generation process.</Description>
     <Version>1.0.0.1</Version>
   </PropertyGroup>
-  
 
+	<ItemGroup>
+		<None Include="..\..\..\..\..\Downloads\dynatest-vector-logo-2022.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 </Project>

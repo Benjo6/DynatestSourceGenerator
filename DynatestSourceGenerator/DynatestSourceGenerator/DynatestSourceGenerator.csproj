@@ -5,7 +5,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.4.2</Version>
+        <Version>0.0.4.3</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -23,12 +23,12 @@
 			Version 0.4.2
 
 			Features
-			UseExistingDTO function has been improved to be more user-friendly. Now, it is possible to define the DTO name that you want to add in the parentheses.
+			One of the most significant improvements is that the Source Generator can now handle all types and collections, making it easier than ever to generate source code for a wide range of applications.
 
-			The performance of the application has been enhanced due to the replacement of generic string search with Regex string searching.
+			In addition, the Source Generator now generates methods only when they are actually used in the application, resulting in more efficient code generation and reduced code bloat. This new functionality ensures that your code is leaner and more optimized than ever before.
 
-			Bug Fixes
-			Source Generator has been updated to fix the issue with unsupported usage of arrays in your properties.
+			Overall, these enhancements make the Dynatest Source Generator an even more powerful and versatile tool for developers, helping them to create high-quality source code faster and more efficiently.
+			
 			Known Issues
 			The inputs for the attributes are all strings, which can cause issues. We recommend verifying that the inputs for the attributes are valid before using them in your code.
 			Thank you for using our software! If you encounter any issues or have any feedback, please do not hesitate to reach out to our support team.
@@ -44,6 +44,16 @@
       </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
     </ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\..\..\..\Downloads\Dynatest Source Generator.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\..\..\..\Downloads\dynatest-vector-logo-2022.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 
 	<ItemGroup>

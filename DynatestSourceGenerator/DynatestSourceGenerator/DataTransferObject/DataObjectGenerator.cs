@@ -1,15 +1,13 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
 using DynatestSourceGenerator.Abstractions.Attributes;
 using DynatestSourceGenerator.DataTransferObject.Extensions;
 using DynatestSourceGenerator.DataTransferObject.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace DynatestSourceGenerator.DataTransferObject;
 
@@ -21,13 +19,6 @@ public class DataObjectGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-#if DEBUG
-if (!Debugger.IsAttached) 
-{ 
-Debugger.Launch(); 
-}
-#endif
-
         var classDeclarationSyntax =
             context.SyntaxProvider.CreateSyntaxProvider(
                     predicate: (node, _) => IsSyntaxTargetForGeneration(node),
@@ -78,8 +69,8 @@ Debugger.Launch();
             if (classDeclarationSyntax is null) continue;
 
             var attributes = from attributeList in classDeclarationSyntax.AttributeLists
-                from attribute in attributeList.Attributes
-                select attribute;
+                             from attribute in attributeList.Attributes
+                             select attribute;
 
             var hasGenerateAttribute = attributes.FirstOrDefault(a => a.Name.ToString() == nameof(GenerateDto));
             if (hasGenerateAttribute is null)
@@ -99,9 +90,9 @@ Debugger.Launch();
                 classBuilder.ToString().IndexOf("public record class ") + "public record class ".Length;
             var classEndIndex = classBuilder.ToString().IndexOf("\n{", classStartIndex);
             var className = classBuilder.ToString().Substring(classStartIndex, classEndIndex - classStartIndex).Trim();
-            
+
             BuildMethods(stringBuilders, className);
-            classBuilder.AppendLine("\n}");
+            classBuilder.AppendLine("}");
 
 
             context.AddSource($"{className}{GeneratedFileSuffix}", classBuilder.ToString());
@@ -112,7 +103,7 @@ Debugger.Launch();
     {
         foreach (var classBuilder in stringBuilders)
         {
-            
+
             var paramStartIndex = classBuilder.ToString().IndexOf("<see cref=\"") + "<see cref=\"".Length;
             var paramEndIndex = classBuilder.ToString().IndexOf("\"", paramStartIndex);
             string param = classBuilder.ToString().Substring(paramStartIndex, paramEndIndex - paramStartIndex).Trim();
@@ -159,7 +150,7 @@ Debugger.Launch();
     /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{className}""/>.</returns>");
                         Map.FromEnumerableMethod(classBuilder, className, param);
                     }
-                    
+
                     if (stringBuilder.ToString().IndexOf($"{className}.MapToList") >= 0)
                     {
                         // MapToList
@@ -192,7 +183,7 @@ Debugger.Launch();
                     {
                         Map.ToIDictionaryMethod(classBuilder, param, className);
                     }
-                    
+
                     if (stringBuilder.ToString().IndexOf($"{className}.MapFromIReadOnlyDictionary") >= 0)
                     {
                         Map.FromIReadOnlyDictionaryMethod(classBuilder, className, param);
@@ -212,7 +203,7 @@ Debugger.Launch();
                     {
                         Map.ToStack(classBuilder, param, className);
                     }
-                    
+
                     if (stringBuilder.ToString().IndexOf($"{className}.MapFromQueue") >= 0)
                     {
                         Map.FromQueue(classBuilder, className, param);
