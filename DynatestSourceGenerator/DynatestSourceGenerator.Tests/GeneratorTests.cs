@@ -91,51 +91,6 @@ public record class MyClassDTO
         await test.RunAsync();
     }
 
-    [Test]
-    public async Task GeneratorShouldGenerate_EmptyDto()
-    {
-        var source = @"
-
-                namespace MyNamespace
-                {
-                    [GenerateDto()]
-                    public class MyClass
-                    {
-
-                    }
-                }";
-
-        var expected = @"using System.Dynamic;
-using System.Linq;
-using SourceDto;
-using MyNamespace;
-
-namespace SourceDto;
-public record class MyClassDTO
-{
-}
-";
-        var test = new TestMachine
-        {
-            TestCode = source,
-            ReferenceAssemblies = ReferenceAssemblies.Default,
-            TestState =
-            {
-                ExpectedDiagnostics =
-                {
-                    DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDto"),
-                    DiagnosticResult.CompilerError("CS0246").WithSpan(5, 22, 5, 33).WithArguments("GenerateDtoAttribute")
-
-                },
-                GeneratedSources =
-                {
-                    (typeof(Adapter<DataObjectGenerator>),"MyClassDTO.g.cs",SourceText.From(expected,Encoding.UTF8))
-                },
-            }
-        };
-        // Act & Assert
-        await test.RunAsync();
-    }
 
     [Test]
     public async Task GeneratorShouldCollectionsGenerate_EmptyDto()
@@ -235,17 +190,17 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(10, 18, 10, 32).WithArguments(
 // /0/Test0.cs(12,20): error CS1022: Type or namespace definition, or end-of-file expected
 DiagnosticResult.CompilerError("CS1022").WithSpan(12, 20, 12, 21),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(10,25): error CS0246: The type or namespace name 'TestingWeather' could not be found (are you missing a using directive or an assembly reference?)
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 10, 25, 10, 39).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 10, 25, 10, 39).WithArguments("TestingWeather"),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(11,14): error CS0246: The type or namespace name 'TestingWeather' could not be found (are you missing a using directive or an assembly reference?)
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 11, 14, 11, 28).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 11, 14, 11, 28).WithArguments("TestingWeather"),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(25,30): error CS0103: The name 'TestingWeather' does not exist in the current context
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 25, 30, 25, 44).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 25, 30, 25, 44).WithArguments("TestingWeather"),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(29,31): error CS0103: The name 'TestingWeather' does not exist in the current context
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 29, 31, 29, 45).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 29, 31, 29, 45).WithArguments("TestingWeather"),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(43,30): error CS0103: The name 'TestingWeather' does not exist in the current context
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 43, 30, 43, 44).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 43, 30, 43, 44).WithArguments("TestingWeather"),
 // DynatestSourceGenerator.Tests\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\MyClassDTO.g.cs(47,31): error CS0103: The name 'TestingWeather' does not exist in the current context
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 47, 31, 47, 45).WithArguments("TestingWeather"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\MyClassDTO.g.cs", 47, 31, 47, 45).WithArguments("TestingWeather"),
 
                 },
                 GeneratedSources =
@@ -405,8 +360,8 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(7, 16, 7, 24).WithArguments("D
 DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDto"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(9, 10, 9, 24).WithArguments("UseExistingDtoAttribute"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(10, 16, 10, 23).WithArguments("MyClass"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 9, 12, 19).WithArguments("MyClassDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 9, 12, 19).WithArguments("MyClassDTO"),
                 },
                 GeneratedSources =
                 {
@@ -546,12 +501,12 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(8, 10, 8, 25).WithArguments("E
 DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDto"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(11, 10, 11, 24).WithArguments("UseExistingDtoAttribute"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(12, 16, 12, 23).WithArguments("Station"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 12, 9, 12, 17).WithArguments("Station2"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 3, 12, 18).WithArguments("ExcludeProperty"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 3, 12, 18).WithArguments("ExcludePropertyAttribute"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 14, 9, 14, 19).WithArguments("StationDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 12, 9, 12, 17).WithArguments("Station2"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 10, 9, 10, 17).WithArguments("DateTime"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 3, 12, 18).WithArguments("ExcludeProperty"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 12, 3, 12, 18).WithArguments("ExcludePropertyAttribute"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 14, 9, 14, 19).WithArguments("StationDTO"),
 
                 },
                 GeneratedSources =
@@ -640,9 +595,9 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(4, 2, 4, 13).WithArguments("Ge
 DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDto"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDtoAttribute"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(8, 17, 8, 32).WithArguments("WeatherForecast"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 10, 14, 10, 32).WithArguments("WeatherForecastDTO"),
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 24, 30, 24, 48).WithArguments("WeatherForecastDTO"),
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 38, 30, 38, 48).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 10, 14, 10, 32).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 24, 30, 24, 48).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 38, 30, 38, 48).WithArguments("WeatherForecastDTO"),
 
                 },
                 GeneratedSources =
@@ -725,9 +680,9 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(4, 2, 4, 13).WithArguments("Ge
 DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDto"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(7, 6, 7, 20).WithArguments("UseExistingDtoAttribute"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(8, 12, 8, 27).WithArguments("WeatherForecast"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 10, 9, 10, 27).WithArguments("WeatherForecastDTO"),
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 22, 29, 22, 47).WithArguments("WeatherForecastDTO"),
-DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 33, 29, 33, 47).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 10, 9, 10, 27).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 22, 29, 22, 47).WithArguments("WeatherForecastDTO"),
+DiagnosticResult.CompilerError("CS0103").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\ClassDTO.g.cs", 33, 29, 33, 47).WithArguments("WeatherForecastDTO"),
 
                 },
                 GeneratedSources =
@@ -890,12 +845,12 @@ DiagnosticResult.CompilerError("CS0246").WithSpan(17, 6, 17, 21).WithArguments("
 DiagnosticResult.CompilerError("CS0246").WithSpan(20, 6, 20, 20).WithArguments("UseExistingDto"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(20, 6, 20, 20).WithArguments("UseExistingDtoAttribute"),
 DiagnosticResult.CompilerError("CS0246").WithSpan(21, 12, 21, 19).WithArguments("Station"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 7, 7, 7, 30).WithArguments("DynatestSourceGenerator"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 16, 9, 16, 29).WithArguments("StationWithNoNameDTO"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 7, 7, 7, 30).WithArguments("DynatestSourceGenerator"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 16, 3, 16, 18).WithArguments("ExcludeProperty"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 16, 3, 16, 18).WithArguments("ExcludePropertyAttribute"),
-DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.3, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 18, 9, 18, 19).WithArguments("StationDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 7, 7, 7, 30).WithArguments("DynatestSourceGenerator"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\TestingWeather.g.cs", 16, 9, 16, 29).WithArguments("StationWithNoNameDTO"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 7, 7, 7, 30).WithArguments("DynatestSourceGenerator"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 16, 3, 16, 18).WithArguments("ExcludeProperty"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 16, 3, 16, 18).WithArguments("ExcludePropertyAttribute"),
+DiagnosticResult.CompilerError("CS0246").WithSpan("DynatestSourceGenerator.Tests\\DynatestSourceGenerator.Tests.Helpers.Adapter`1[[DynatestSourceGenerator.DataTransferObject.DataObjectGenerator, DynatestSourceGenerator, Version=0.0.4.4, Culture=neutral, PublicKeyToken=null]]\\WeatherForecastDTO.g.cs", 18, 9, 18, 19).WithArguments("StationDTO"),
            },
                 GeneratedSources =
                 {

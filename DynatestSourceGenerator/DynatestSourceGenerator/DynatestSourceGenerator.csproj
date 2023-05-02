@@ -5,7 +5,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <RootNamespace>DynatestSourceGenerator</RootNamespace>
-        <Version>0.0.4.3</Version>
+        <Version>0.0.4.5</Version>
         <PackageId>$(AssemblyName)</PackageId>
         <Title>Dynatest Source Generator</Title>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -20,7 +20,7 @@
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<BuildOutputTargetFolder>analyzers</BuildOutputTargetFolder>
 		<PackageReleaseNotes>
-			Version 0.4.2
+			Version 0.4.5
 
 			Features
 			One of the most significant improvements is that the Source Generator can now handle all types and collections, making it easier than ever to generate source code for a wide range of applications.
@@ -34,6 +34,8 @@
 			Thank you for using our software! If you encounter any issues or have any feedback, please do not hesitate to reach out to our support team.
 		</PackageReleaseNotes>
 		<Nullable>enable</Nullable>
+		<PackageReadmeFile>Dynatest Source Generator.md</PackageReadmeFile>
+		<PackageIcon>dynatest-vector-logo-2022.png</PackageIcon>
 	</PropertyGroup>
 	
 

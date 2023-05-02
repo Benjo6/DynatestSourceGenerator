@@ -106,16 +106,31 @@ public class DataObjectGenerator : IIncrementalGenerator
 
             var paramStartIndex = classBuilder.ToString().IndexOf("<see cref=\"") + "<see cref=\"".Length;
             var paramEndIndex = classBuilder.ToString().IndexOf("\"", paramStartIndex);
-            string param = classBuilder.ToString().Substring(paramStartIndex, paramEndIndex - paramStartIndex).Trim();
+            var param = classBuilder.ToString().Substring(paramStartIndex, paramEndIndex - paramStartIndex).Trim();
             var classStartIndex =
                 classBuilder.ToString().IndexOf("public record class ") + "public record class ".Length;
             var classEndIndex = classBuilder.ToString().IndexOf("\n{", classStartIndex);
             var className = classBuilder.ToString().Substring(classStartIndex, classEndIndex - classStartIndex).Trim();
+            var checkMapFromArray = false;
+            var checkMapToArray = false;
+            var checkMapFromList = false;
+            var checkMapToList = false;
+            var checkMapFromDictionary = false;
+            var checkMapToDictionary = false;
+            var checkMapFromQueue = false;
+            var checkMapFromStack = false;
+            var checkMapToQueue = false;
+            var checkMapToStack = false;
+            var checkMapFromIDictionary = false;
+            var checkMapToIDictionary = false;
+            var checkMapFromIReadOnlyDictionary = false;
+            var checkMapToIReadOnlyDictionary = false;
+
             if (className == dataTransferObject)
             {
                 foreach (var stringBuilder in stringBuilders)
                 {
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromArray") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromArray") >= 0 && !checkMapFromArray)
                     {
                         // MapFromArray
                         classBuilder.AppendLine($@"
@@ -125,9 +140,10 @@ public class DataObjectGenerator : IIncrementalGenerator
     /// <param name=""source"">The array of objects of type <see cref=""{param}""/> to be mapped.</param>
     /// <returns>The mapped array of objects of type <see cref=""{className}""/>.</returns>");
                         Map.FromArrayMethod(classBuilder, className, param);
+                        checkMapFromArray = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToArray") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToArray") >= 0 && !checkMapToArray)
                     {
                         // MapToArray
                         classBuilder.AppendLine($@"
@@ -137,9 +153,10 @@ public class DataObjectGenerator : IIncrementalGenerator
     /// <param name=""source"">The array of objects of type <see cref=""{className}""/> to be mapped.</param>
     /// <returns>The mapped array of objects of type <see cref=""{param}""/>.</returns>");
                         Map.ToArrayMethod(classBuilder, param, className);
+                        checkMapToArray = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromList") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromList") >= 0 && !checkMapFromList)
                     {
                         // MapFromList
                         classBuilder.AppendLine($@"
@@ -149,9 +166,10 @@ public class DataObjectGenerator : IIncrementalGenerator
     /// <param name=""source"">The <see cref=""IEnumerable""/> of objects of type <see cref=""{param}""/> to be mapped.</param>
     /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{className}""/>.</returns>");
                         Map.FromEnumerableMethod(classBuilder, className, param);
+                        checkMapFromList = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToList") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToList") >= 0 && !checkMapToList)
                     {
                         // MapToList
                         classBuilder.AppendLine($@"
@@ -161,57 +179,63 @@ public class DataObjectGenerator : IIncrementalGenerator
     /// <param name=""source"">The <see cref=""IEnumerable""/> of objects of type <see cref=""{className}""/> to be mapped.</param>
     /// <returns>The mapped <see cref=""List""/> of objects of type <see cref=""{param}""/>.</returns>");
                         Map.ToEnumerableMethod(classBuilder, param, className);
+                        checkMapToList = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromDictionary") >= 0 && !checkMapFromDictionary)
                     {
                         Map.FromDictionaryMethod(classBuilder, className, param);
-
+                        checkMapFromDictionary = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToDictionary") >= 0 && !checkMapToDictionary)
                     {
                         Map.ToDictionaryMethod(classBuilder, param, className);
+                        checkMapToDictionary = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromIDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromIDictionary") >= 0 && !checkMapFromIDictionary)
                     {
                         Map.FromIDictionaryMethod(classBuilder, className, param);
-
+                        checkMapFromIDictionary = true;
                     }
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToIDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToIDictionary") >= 0 && !checkMapToIDictionary)
                     {
                         Map.ToIDictionaryMethod(classBuilder, param, className);
+                        checkMapToIDictionary = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromIReadOnlyDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromIReadOnlyDictionary") >= 0 && !checkMapFromIReadOnlyDictionary)
                     {
                         Map.FromIReadOnlyDictionaryMethod(classBuilder, className, param);
-
+                        checkMapFromIReadOnlyDictionary = true;
                     }
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToIReadOnlyDictionary") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToIReadOnlyDictionary") >= 0 && !checkMapToIReadOnlyDictionary)
                     {
                         Map.ToIReadOnlyDictionaryMethod(classBuilder, param, className);
+                        checkMapToIReadOnlyDictionary = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromStack") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromStack") >= 0 && !checkMapFromStack)
                     {
                         Map.FromStack(classBuilder, className, param);
-
+                        checkMapFromStack = true;
                     }
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToStack") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToStack") >= 0 && !checkMapToStack)
                     {
                         Map.ToStack(classBuilder, param, className);
+                        checkMapToStack = true;
                     }
 
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromQueue") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapFromQueue") >= 0 && !checkMapFromQueue)
                     {
                         Map.FromQueue(classBuilder, className, param);
-
+                        checkMapFromQueue = true;
                     }
-                    if (stringBuilder.ToString().IndexOf($"{className}.MapToQueue") >= 0)
+                    if (stringBuilder.ToString().IndexOf($"{className}.MapToQueue") >= 0 && !checkMapToQueue)
                     {
                         Map.ToQueue(classBuilder, param, className);
+                        checkMapToQueue = true;
                     }
                 }
 
@@ -273,7 +297,6 @@ public record class {className}
     /// <returns>The mapped <see cref=""{className}""/> instance.</returns>
     public {className} MapFrom({param} instance)
     {{");
-                classBuilder.AppendLine($"\t\tif (instance is null)\r\n\t\t\treturn default;");
                 classBuilder.AppendLine($"\t\tvar target = new {className}();");
                 foreach (var property in Map.FromProperties(classWithoutExcludedProperties, className))
                 {

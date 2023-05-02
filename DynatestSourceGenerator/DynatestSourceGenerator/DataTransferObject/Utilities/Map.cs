@@ -148,8 +148,17 @@ internal static class Map
                         }
                         break;
                     }
+                    case SimpleNameSyntax:
+                    {
+                        var type = Append.AppropriateDataTransferObjectName(name.ToString(), usingSubstitute, replace);
+
+                        props.Add(
+                            $"target.{propertyDeclaration.Identifier} = new {type}().MapFrom(instance.{propertyDeclaration.Identifier});");
+                        break;
+                    }
                     default:
                         continue;
+                   
                 }
             }
         }
@@ -298,6 +307,14 @@ internal static class Map
                                 break;
                         }
 
+                        break;
+                    }
+                    case SimpleNameSyntax:
+                    {
+                        var type = Append.AppropriateDataTransferObjectName(name.ToString(), usingSubstitute, replace);
+
+                        props.Add(
+                            $"target.{propertyDeclaration.Identifier} = new {type}().MapTo();");
                         break;
                     }
                     default:
@@ -1564,7 +1581,7 @@ internal static class Map
             .WithModifiers(
                 TokenList(Token(
                         TriviaList(
-                            Whitespace("    ")),
+                            Tab),
                         SyntaxKind.InternalKeyword,
                         TriviaList(
                             Space)), Token(
@@ -1676,13 +1693,16 @@ internal static class Map
                                         InvocationExpression(
                                             MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
-                                                ElementAccessExpression(
-                                                    IdentifierName("target"))
+                                                ObjectCreationExpression(
+                                                    IdentifierName(target))
+                                                .WithNewKeyword(
+                                                    Token(
+                                                        TriviaList(),
+                                                        SyntaxKind.NewKeyword,
+                                                        TriviaList(
+                                                            Space)))
                                                 .WithArgumentList(
-                                                    BracketedArgumentList(
-                                                        SingletonSeparatedList(
-                                                            Argument(
-                                                                IdentifierName("i"))))),
+                                                    ArgumentList()),
                                                 IdentifierName("MapFrom")))
                                         .WithArgumentList(
                                             ArgumentList(
